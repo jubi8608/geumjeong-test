@@ -73,7 +73,7 @@ var GJ_DATA = {
 
     { key: "understand", name: "이해·정리 전략", domain: "strategy",
       good: "배운 내용을 자기 말로 정리하는 힘이 있습니다.",
-      rx: "배운 개념을 학생이 직접 설명해 보는 '거꾸로 설명' 시간을 두고, 단원별 개념 정리 노트를 함께 만듭니다.",
+      rx: "개념부터 철저히 잡습니다. 배운 개념을 학생이 직접 설명해 보게 하고, 앞 단원 개념과 연결해 정리합니다.",
       items: [
         ["배운 내용을 내 말로 다시 설명할 수 있다."],
         ["중요한 내용은 표시하거나 따로 정리한다."],
@@ -82,7 +82,7 @@ var GJ_DATA = {
       ] },
     { key: "review", name: "점검·복습 전략", domain: "strategy",
       good: "스스로 점검하고 복습하는 습관이 잡혀 있습니다.",
-      rx: "1일·1주·1달 간격의 누적 복습 테스트로, 잊어버리기 전에 다시 꺼내 보게 합니다.",
+      rx: "누적해서 학습하고 누적해서 확인합니다. 1일·1주·1달 간격의 누적 복습 테스트로 잊기 전에 다시 꺼내 보고, 부족한 부분은 바로 채웁니다.",
       items: [
         ["공부한 뒤 내가 정말 아는지 스스로 확인해 본다."],
         ["배운 내용은 며칠 안에 다시 복습한다."],
@@ -130,7 +130,7 @@ var GJ_DATA = {
 
     { key: "mathConf", name: "수학 자신감", domain: "math",
       good: "수학을 해낼 수 있다는 자신감이 있습니다.",
-      rx: "현재 실력보다 한 단계 쉬운 문제부터 시작해 성공 경험을 쌓고, 개인별 맞춤 진도로 자신감을 되찾게 합니다.",
+      rx: "이전 학년에서 빠진 개념이 없는지 찾아 먼저 메우고, 개인별 학습 로드맵에 따라 한 단계씩 성공 경험을 쌓게 합니다.",
       items: [
         ["나는 수학을 잘할 수 있다고 생각한다."],
         ["처음 보는 수학 문제도 한번 풀어 볼 만하다고 느낀다."],
@@ -521,6 +521,42 @@ var GJ_GUIDE = {
     errorHandle: "원인을 나눠 쓰는 오답 노트와 재풀이",
     persist: "힌트를 단계별로 주며 끝까지 풀어 보기"
   },
+  /* 질문에 이런 답이 나오면 이렇게 이어 가기 */
+  follow: {
+    selfEff: "'못한다'는 말이 잦다면 → 실력보다 자신감 문제일 가능성이 커요. 쉬운 성공 경험부터 쌓겠다고 말씀드리세요.",
+    intrinsic: "관심 분야가 있다면 → 그 분야와 수학을 연결한 예시로 흥미를 끌 수 있다고 말씀드리세요.",
+    goal: "목표 이야기를 안 해 봤다면 → 첫 수업에서 아이와 함께 학기 목표를 정해 보자고 제안하세요.",
+    focus: "20분도 못 앉아 있다면 → 수업을 짧게 끊어 운영하는 방식을 구체적으로 설명하세요.",
+    plan: "밤늦게 몰아서 한다면 → 주간 계획표와 수업 시작 때 실천 확인을 소개하세요.",
+    diligence: "숙제를 빠뜨린다면 → 양보다 완성도를 보는 과제와 풀이 확인 방식을 설명하세요.",
+    understand: "외운 대로만 말한다면 → 배운 개념을 직접 설명해 보는 시간을 소개하세요.",
+    review: "시험 직전에만 공부한다면 → 1일·1주·1달 누적 복습 테스트 주기를 말씀드리세요.",
+    anxiety: "배가 아프거나 잠을 못 잔다면 → 실전 형식 테스트로 시험에 익숙해지게 하겠다고 말씀드리세요.",
+    resilience: "크게 낙담하거나 포기한다면 → 과정 칭찬과 '다음엔 이렇게' 계획 방식을 소개하세요.",
+    family: "공부 이야기로 자주 다툰다면 → 공부 관리는 학원이 맡고, 가정은 응원만 해 주시면 된다고 말씀드리세요.",
+    phone: "휴대폰을 옆에 둔다면 → 수업 중 보관 원칙과 집에서의 휴대폰 약속을 제안하세요.",
+    mathConf: "특정 학년·단원부터 어려워했다면 → 그 단원부터 다시 짚는 맞춤 진도를 설명하세요.",
+    mathCalm: "막히면 울거나 피한다면 → 단계별 문제 구성과 질문하기 편한 분위기를 강조하세요.",
+    errorHandle: "틀린 문제를 다시 안 본다면 → 오답 노트 방식과 재풀이 일정을 보여 주세요.",
+    persist: "바로 답지를 본다면 → 힌트를 단계별로 주는 지도 방식을 설명하세요."
+  },
+  /* 부모님 쪽 신호가 낮은(좋은) 항목은 먼저 인정해 드리기 */
+  praise: {
+    worry: "아이 성적에 차분하게 대해 주시는 점",
+    pressure: "아이를 몰아붙이지 않고 기다려 주시는 점",
+    outcome: "결과보다 과정을 봐 주시는 점",
+    compare: "다른 아이와 비교하지 않으시는 점",
+    mathBurden: "수학을 편안하게 대해 주시는 점",
+    autonomy: "아이를 믿고 맡겨 주시는 점"
+  },
+  /* 금정수학 교육 철학 (블로그 '진짜 학습은 지속가능해야 합니다') */
+  philosophy: [
+    "진짜 학습은 지속가능해야 합니다. 한 단원에서 끝나지 않고 다음 학습으로 이어지게 지도합니다.",
+    "지금 학년을 가르치면서도 이전 개념에 빈틈이 없는지 찾아 메우고, 개념을 확장할 기반을 다시 다집니다.",
+    "누적해서 학습시키고, 누적해서 확인합니다. 부족한 부분은 그때그때 바로 채웁니다.",
+    "개인별 학습 로드맵에 따라 아이의 속도와 수준에 맞게 진행합니다. 무분별한 선행은 하지 않습니다.",
+    "중등 과정을 마치고 어디로 가든 학습의 흐름과 학습 태도가 끊어지지 않게 준비시킵니다."
+  ],
   /* 부모 신호를 부드럽게 꺼내는 말 */
   soft: {
     worry: "그만큼 아이를 아끼셔서 걱정도 크신 것 같아요. 그런데 아이는 그 걱정을 생각보다 크게 느끼고 있을 수 있어요.",
@@ -534,22 +570,57 @@ var GJ_GUIDE = {
 
 /* 결과로 상담 가이드 만들기 */
 function gjGuide(r, open, pr) {
-  var g = { opener: [], asks: [], soft: [], plan: [], cautions: [], quote: "" };
+  open = open || {};
+  var g = { flow: [], opener: [], answers: [], asks: [], praise: [], soft: [], teach: [], plan: [], cautions: [], closing: [], quote: "" };
   var cf = {}; r.factors.forEach(function (f) { cf[f.key] = f; });
   var top = r.strengths[0], low = r.focus.length ? r.focus : r.weak;
-  g.opener.push("강점으로 시작: '" + top.name + "' " + top.score + "점. " + top.good);
-  if (low[0]) g.opener.push("핵심 과제 하나만 짚기: '" + low[0].name + "' " + low[0].score + "점.");
+
+  g.flow = [
+    "강점부터: 1쪽 '강점 TOP 3'를 먼저 보여 주세요. 칭찬으로 시작하면 학부모님 마음이 열려요.",
+    "학생이 쓴 이야기: 2쪽 아래 '학생이 직접 쓴 이야기'를 함께 읽고 학부모님 반응을 들어 보세요.",
+    "현재 모습: 1쪽 레이더 차트와 '관심이 필요한 요인'을 짚어요. 숫자보다 '이런 모습이 있을 거예요'로 말해 주세요.",
+    pr ? "부모님과 아이: '부모 마음 × 아이 마음'은 성향 궁합(잘 맞는 점)부터 보여 주고, 신호는 마지막에 부드럽게 꺼내세요."
+       : "학부모 검사: 아직 없다면 상담 중 #parent 링크로 5분 검사를 권해 보세요.",
+    "해결책: 3쪽 '금정수학 맞춤 처방'으로 넘어가 수업 방식으로 연결하세요.",
+    "마무리: 3~6개월 뒤 재검사로 변화를 보여 드리겠다는 약속으로 끝내세요."
+  ];
+
+  g.opener.push("“" + top.name + " 점수가 " + top.score + "점으로 높게 나왔어요. " + top.good + "”");
+  if (low[0]) g.opener.push("핵심 과제는 하나만 먼저: '" + low[0].name + "' " + low[0].score + "점. 여러 개를 한꺼번에 말하면 학부모님이 부담을 느껴요.");
   g.opener.push("학습 유형 '" + r.type.name + "': " + r.type.desc);
-  low.slice(0, 3).forEach(function (f) { g.asks.push(GJ_GUIDE.ask[f.key]); });
-  if (open && open.o5) g.quote = open.o5;
-  low.slice(0, 3).forEach(function (f) { g.plan.push(f.name + " → " + GJ_GUIDE.plan[f.key]); });
+
+  if (open.o1) g.answers.push("자신 있는 단원 '" + open.o1 + "' → 이 단원을 먼저 칭찬하며 시작해도 좋아요.");
+  if (open.o2) g.answers.push("어려운 단원 '" + open.o2 + "' → 첫 수업 진단 범위로 제안하세요.");
+  if (open.o3 || open.o4) g.answers.push("하루 공부 " + (open.o3 || "?") + " · 목표 " + (open.o4 || "?") + " → 목표에 맞는 공부량을 함께 설계하자고 제안하세요.");
+  if (open.o6) g.answers.push("선생님께 바라는 점 '" + open.o6 + "' → 수업 방식을 설명할 때 꼭 이 부분을 짚어 주세요.");
+  if (open.o5) g.quote = open.o5;
+
+  low.slice(0, 3).forEach(function (f) { g.asks.push({ q: GJ_GUIDE.ask[f.key], f: GJ_GUIDE.follow[f.key], name: f.name }); });
+
   if (pr) {
-    pr.risks.slice(0, 2).forEach(function (f) { g.soft.push({ name: f.name, text: GJ_GUIDE.soft[f.key] }); });
+    pr.factors.filter(function (f) { return !f.risk && (f.burden ? f.score < 40 : f.score >= 60); }).slice(0, 2)
+      .forEach(function (f) { g.praise.push(GJ_GUIDE.praise[f.key]); });
+    pr.risks.slice(0, 3).forEach(function (f) { g.soft.push({ name: f.name, text: GJ_GUIDE.soft[f.key] }); });
   }
+
+  g.teach = r.type.tips.slice();
+
+  low.slice(0, 3).forEach(function (f, i) {
+    g.plan.push((i === 0 ? "첫 달" : i === 1 ? "첫 달~2개월" : "3개월까지") + " · " + f.name + " → " + GJ_GUIDE.plan[f.key]);
+  });
+
   if (cf.anxiety.score < 50 || cf.mathCalm.score < 50) g.cautions.push("시험·수학 긴장이 큰 아이예요. 아이 앞에서 점수·등수 이야기는 줄이고, 결과지는 학부모님과 먼저 보세요.");
   if (cf.resilience.score < 50) g.cautions.push("실패 이야기에 쉽게 위축되는 아이예요. 약점보다 강점을 먼저, 많이 말해 주세요.");
   if (cf.selfEff.score < 50 || cf.mathConf.score < 50) g.cautions.push("자신감이 낮은 상태예요. 상담 중 문제를 풀게 한다면 쉬운 것부터 시작하세요.");
   if (pr && cf.intrinsic.score < 50 && pr.factors.filter(function (f) { return f.key === "pressure"; })[0].risk) g.cautions.push("공부 압박이 이미 큰 상태라 숙제 양을 늘리는 제안은 피하는 게 좋아요.");
+  if (cf.family.score < 50) g.cautions.push("집에서 공부 이야기가 갈등이 되기 쉬운 상황이에요. 학부모님 탓으로 들리지 않게, '학원이 관리하겠다'는 쪽으로 말해 주세요.");
   if (!g.cautions.length) g.cautions.push("전반적으로 안정적인 아이예요. 강점을 먼저 짚고, 목표를 함께 세우는 이야기로 이어 가세요.");
+
+  g.philo = GJ_GUIDE.philosophy.slice();
+  if (pr && pr.axes.Q < 0) g.philo.unshift("이 학부모님은 빠른 진도를 원하시는 편이에요. '무분별한 선행 대신, 빈틈 없이 다지는 것이 결국 더 빠르다'는 금정수학 원칙을 꼭 설명해 주세요.");
+  g.closing.push("“진짜 학습은 지속가능해야 한다고 생각해요. 누적해서 배우고 누적해서 확인하면서, 부족한 부분은 그때그때 채워 가겠습니다.”");
+  g.closing.push("“오늘 결과는 지금의 모습이에요. 3~6개월 뒤 같은 검사로 얼마나 달라졌는지 숫자로 보여 드릴게요.”");
+  if (low[0]) g.closing.push("“처음 한 달은 " + low.slice(0, 2).map(function (f) { return "'" + f.name + "'"; }).join("와 ") + "을(를) 잡는 데 집중하겠습니다.”");
+  g.closing.push("“" + r.type.name + " 아이에게 맞는 방식으로 지도하겠습니다.”");
   return g;
 }

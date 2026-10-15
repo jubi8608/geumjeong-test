@@ -121,7 +121,9 @@ table.list tr.click:hover td { background: var(--soft) }
 .gbox.wide { grid-column: 1 / -1 }
 .gbox h3 { font-size: 15px; margin: 0 0 6px }
 .gbox h3 small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 6px }
-.gbox ul { margin: 0; padding-left: 1.2em } .gbox li { margin: 4px 0 }
+.gbox ul, .gbox ol { margin: 0; padding-left: 1.2em } .gbox li { margin: 4px 0 }
+.asks li { margin: 6px 0 } .asks li span { display: block; color: var(--muted); font-size: 13px; margin-top: 2px }
+@media print { .guide { font-size: 11.5px } .gbox { break-inside: avoid; padding: 10px 12px } }
 .gbox p { margin: 4px 0 }
 .gq { background: var(--accent-soft); border-radius: 6px; padding: 8px 10px; margin-top: 8px !important; font-size: 13.5px }
 .gsub { font-weight: 700; margin-top: 10px !important }
@@ -236,8 +238,8 @@ table.list tr.click:hover td { background: var(--soft) }
   <main id="app"></main>
 </div>
 
-<script src="config.js?v=202610160245"></script>
-<script src="questions.js?v=202610160245"></script>
+<script src="config.js?v=202610160256"></script>
+<script src="questions.js?v=202610160256"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -426,14 +428,21 @@ table.list tr.click:hover td { background: var(--soft) }
       '<div class="guide-h"><div><span class="guide-tag">원장님만 보는 화면</span><h2>' + esc(info.name) + ' 상담 가이드</h2></div><span class="row">' + (inFrame ? '' : '<button class="btn primary" id="guidePdf">가이드 PDF 저장</button>') + '<button class="btn" id="guideClose">닫기</button></span></div>' +
       '<p class="guide-note">학부모님께 드리는 결과지 PDF에는 나오지 않아요. 원장님용으로는 \'가이드 PDF 저장\'으로 따로 저장할 수 있어요.</p>' +
       '<div class="guide-grid">' +
-        '<div class="gbox"><h3>1. 이렇게 시작하세요</h3>' + li(g.opener) + '</div>' +
-        '<div class="gbox"><h3>2. 학부모님께 물어볼 질문</h3>' + li(g.asks) + (g.quote ? '<p class="gq">학생이 직접 쓴 고민: “' + esc(g.quote) + '”<br>이 내용을 알고 계셨는지 여쭤보세요.</p>' : '') + '</div>' +
-        (pr ? '<div class="gbox wide"><h3>3. 부모님 이야기는 이렇게 꺼내세요 <small>양육 스타일: ' + esc(pr.type.name) + '</small></h3>' +
-          (g.soft.length ? '<ul>' + g.soft.map(function (x) { return '<li><b>' + esc(x.name) + '</b> “' + esc(x.text) + '”</li>'; }).join("") + '</ul>' : '<p>부모님 쪽 부담 신호가 크지 않아요. 지금의 지원을 인정해 드리며 시작하세요.</p>') +
+        '<div class="gbox wide"><h3>1. 결과지는 이 순서로 보여 주세요</h3><ol>' + g.flow.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ol></div>' +
+        '<div class="gbox"><h3>2. 이렇게 시작하세요</h3>' + li(g.opener) +
+          (g.answers.length ? '<p class="gsub">학생이 쓴 답 활용하기</p>' + li(g.answers) : '') + '</div>' +
+        '<div class="gbox"><h3>3. 학부모님께 물어볼 질문</h3><ul class="asks">' + g.asks.map(function (a) { return '<li><b>' + esc(a.q) + '</b><span>' + esc(a.f) + '</span></li>'; }).join("") + '</ul>' +
+          (g.quote ? '<p class="gq">학생이 직접 쓴 고민: “' + esc(g.quote) + '”<br>이 내용을 알고 계셨는지 여쭤보세요.</p>' : '') + '</div>' +
+        (pr ? '<div class="gbox wide"><h3>4. 부모님 이야기는 이렇게 꺼내세요 <small>양육 스타일: ' + esc(pr.type.name) + '</small></h3>' +
+          (g.praise.length ? '<p class="gsub">먼저 인정해 드릴 점</p>' + li(g.praise.map(function (t) { return "“" + t + "이 정말 좋아요.”"; })) : '') +
+          (g.soft.length ? '<p class="gsub">조심스럽게 꺼낼 이야기</p><ul>' + g.soft.map(function (x) { return '<li><b>' + esc(x.name) + '</b> “' + esc(x.text) + '”</li>'; }).join("") + '</ul>' : '<p>부모님 쪽 부담 신호가 크지 않아요. 지금의 지원을 인정해 드리며 시작하세요.</p>') +
           (fitsGap.length ? '<p class="gsub">아이와 성향 차이</p>' + li(fitsGap) : '') + '</div>'
-          : '<div class="gbox wide"><h3>3. 부모님 이야기</h3><p>학부모 검사 결과가 아직 없어요. 상담 중 학부모님께 <b>#parent</b> 링크로 5분 검사를 권해 보세요. 결과가 오면 이 칸이 채워져요.</p></div>') +
-        '<div class="gbox"><h3>4. 금정수학 수업으로 연결하기</h3><p>“그래서 첫 달에는 이것부터 잡겠습니다.”</p>' + li(g.plan) + '</div>' +
-        '<div class="gbox"><h3>5. 조심할 점</h3>' + li(g.cautions) + '</div>' +
+          : '<div class="gbox wide"><h3>4. 부모님 이야기</h3><p>학부모 검사 결과가 아직 없어요. 상담 중 학부모님께 <b>#parent</b> 링크로 5분 검사를 권해 보세요. 결과가 오면 이 칸이 채워져요.</p></div>') +
+        '<div class="gbox"><h3>5. 이 아이는 이렇게 가르쳐요 <small>' + esc(r.type.name) + '</small></h3>' + li(g.teach) + '</div>' +
+        '<div class="gbox"><h3>6. 금정수학 수업으로 연결하기</h3><p>“그래서 저희는 개인별 학습 로드맵으로, 이 순서로 잡겠습니다.”</p>' + li(g.plan) + '</div>' +
+        '<div class="gbox wide"><h3>금정수학 교육 철학으로 이어 말하기</h3>' + li(g.philo) + '</div>' +
+        '<div class="gbox"><h3>7. 조심할 점</h3>' + li(g.cautions) + '</div>' +
+        '<div class="gbox"><h3>8. 마무리 멘트</h3>' + li(g.closing) + '</div>' +
       '</div></section>';
   }
 
@@ -597,12 +606,20 @@ table.list tr.click:hover td { background: var(--soft) }
     }).catch(function () { app.innerHTML = '<div class="panel"><p class="err">목록을 불러오지 못했어요. 인터넷 연결과 config.js의 API_URL을 확인해 주세요.</p><button class="btn" id="retry">다시 시도</button></div>'; document.getElementById("retry").onclick = list; });
   }
   function drawList(q) {
-    bar.innerHTML = '<span class="title">검사 결과 목록 <span class="muted" style="font-family:var(--body);font-size:14px">' + cache.length + '명</span></span><span class="row"><button class="btn" id="reload">새로고침</button><button class="btn" id="out">로그아웃</button></span>';
+    bar.innerHTML = '<span class="title">검사 결과 목록 <span class="muted" style="font-family:var(--body);font-size:14px">' + cache.length + '건</span></span><span class="row"><button class="btn" id="reload">새로고침</button><button class="btn" id="out">로그아웃</button></span>';
     document.getElementById("reload").onclick = list;
     document.getElementById("out").onclick = function () { setPw(""); login(); };
-    var rows = cache.filter(function (it) { return !q || (it.name + it.school).indexOf(q) >= 0; });
+    /* 짝이 맞은 학부모 줄은 학생 줄에 묶어서 한 줄로 */
+    var base = function (it) { return gjNorm(it.name) + "|" + gjNorm(it.school) + "|" + gjNorm(it.grade) + "|" + gjNorm(it.level); };
+    var latestStudent = {};
+    cache.forEach(function (it) { if (it.role !== "parent" && it.paired) { var k = base(it); if (!latestStudent[k] || new Date(it.ts) > new Date(latestStudent[k].ts)) latestStudent[k] = it; } });
+    var parentOf = {}, hidden = {};
+    cache.forEach(function (it) {
+      if (it.role === "parent" && it.paired) { var st = latestStudent[base(it)]; if (st) { if (!parentOf[st.id]) parentOf[st.id] = it; hidden[it.id] = true; } }
+    });
+    var rows = cache.filter(function (it) { return !hidden[it.id] && (!q || (it.name + it.school).indexOf(q) >= 0); });
     app.innerHTML = '<div class="panel"><input type="search" id="q" placeholder="이름이나 학교로 찾기" value="' + esc(q) + '"><div class="tablewrap"><table class="list"><thead><tr><th>제출일</th><th>이름</th><th>학교</th><th>학년</th><th>종합</th><th>학습 유형</th></tr></thead><tbody>' +
-      (rows.length ? rows.map(function (it) { return '<tr class="click" data-id="' + esc(it.id) + '" tabindex="0"><td>' + fmtDate(it.ts) + '</td><td><b>' + esc(it.name) + '</b>' + (it.role === "parent" ? ' <span class="chip mid">학부모</span>' : '') + (it.round > 1 ? ' <span class="chip high">' + it.round + '회차</span>' : '') + (it.paired && it.role !== "parent" ? ' <span class="chip pair">부모 검사 ✓</span>' : '') + '</td><td>' + esc(it.school) + '</td><td>' + esc(it.grade) + '</td><td>' + esc(it.overall) + '</td><td>' + esc(it.type) + '</td></tr>'; }).join("")
+      (rows.length ? rows.map(function (it) { return '<tr class="click" data-id="' + esc(it.id) + '" tabindex="0"><td>' + fmtDate(it.ts) + '</td><td><b>' + esc(it.name) + '</b>' + (it.role === "parent" ? ' <span class="chip mid">학부모</span>' : '') + (it.round > 1 ? ' <span class="chip high">' + it.round + '회차</span>' : '') + (parentOf[it.id] ? ' <span class="chip pair">학생 + 학부모</span>' : (it.paired && it.role !== "parent" ? ' <span class="chip pair">부모 검사 ✓</span>' : '')) + '</td><td>' + esc(it.school) + '</td><td>' + esc(it.grade) + '</td><td>' + esc(it.overall) + '</td><td>' + esc(it.type) + (parentOf[it.id] ? '<br><small class="muted">' + esc(parentOf[it.id].type) + '</small>' : '') + '</td></tr>'; }).join("")
         : '<tr><td colspan="6" class="muted">아직 제출된 검사가 없어요. 학생이 검사를 마치면 여기에 나타나요.</td></tr>') +
       '</tbody></table></div></div>';
     var qi = document.getElementById("q");
