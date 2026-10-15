@@ -97,7 +97,9 @@ table.list tr.click:hover td { background: var(--soft) }
 .fit .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px }
 .fit .line { position: relative; height: 12px; margin: 6px 0 4px; background: var(--soft); border-radius: 6px }
 .fit .dot { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--ink); transform: translate(-50%, -50%) }
-.fit .dot.pdot { background: var(--ink); border-color: var(--ink); border-radius: 3px; width: 15px; height: 15px; transform: translate(-50%, -50%) rotate(45deg) }
+.fit .line { height: 14px; margin: 12px 0 14px }
+.fit .dot { top: 100%; z-index: 2 }
+.fit .dot.pdot { top: 0; z-index: 1; background: var(--ink); border-color: var(--ink); border-radius: 3px; width: 15px; height: 15px; transform: translate(-50%, -50%) rotate(45deg) }
 .fit p, .lk p { margin: 2px 0 0; font-size: 13px; color: var(--muted) }
 .links { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 8px }
 .lk { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px }
@@ -209,8 +211,8 @@ table.list tr.click:hover td { background: var(--soft) }
   <main id="app"></main>
 </div>
 
-<script src="config.js?v=202610160236"></script>
-<script src="questions.js?v=202610160236"></script>
+<script src="config.js?v=202610160240"></script>
+<script src="questions.js?v=202610160240"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
