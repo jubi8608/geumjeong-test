@@ -324,3 +324,149 @@ function gjScore(answers) {
     focus: factors.filter(function (f) { return f.score < 60; }).sort(function (a, b) { return a.score - b.score; }).slice(0, 5)
   };
 }
+
+/* ───────────────── 학부모 양육 스타일 검사 ─────────────────
+   burden: true 인 요인은 점수가 높을수록 아이에게 부담이 될 수 있는 신호,
+   false(자율 지지)는 높을수록 아이에게 도움이 되는 신호입니다. */
+var GJ_PARENT = {
+  factors: [
+    { key: "worry", name: "자녀 학업 걱정", burden: true,
+      tip: "걱정이 클수록 아이 앞에서는 점수보다 준비 과정을 이야기해 주세요.",
+      items: [["아이 성적 때문에 걱정되어 잠을 설친 적이 있다."], ["아이가 다른 아이들보다 뒤처질까 봐 불안하다."], ["시험 기간이 되면 아이보다 내가 더 긴장된다."], ["아이 성적에 대해 비교적 느긋한 편이다.", true]] },
+    { key: "pressure", name: "공부·과제 압박", burden: true,
+      tip: "공부 시간과 분량은 아이와 함께 정하고, 약속을 지켰으면 더 요구하지 않기로 해 보세요.",
+      items: [["아이가 쉬고 있으면 공부하라는 말이 먼저 나온다."], ["숙제를 다 했는지 매일 확인하고 재촉한다."], ["성적이 떨어지면 휴대폰·게임 등을 제한한다."], ["아이가 정한 공부량이 적어 보여도 일단 맡겨 둔다.", true]] },
+    { key: "outcome", name: "결과 중심 반응", burden: true,
+      tip: "시험이 끝나면 '몇 점이야?' 대신 '어떤 문제가 어려웠어?'로 대화를 시작해 보세요.",
+      items: [["시험이 끝나면 점수부터 묻게 된다."], ["노력했어도 결과가 나쁘면 아쉬운 마음을 내비친다."], ["점수가 낮아도 열심히 했으면 칭찬한다.", true], ["틀린 문제를 통해 무엇을 배웠는지 묻는다.", true]] },
+    { key: "compare", name: "비교하는 말", burden: true,
+      tip: "다른 아이 대신 아이의 지난번 모습과 비교해 '지난번보다 이만큼 늘었네'라고 말해 주세요.",
+      items: [["다른 아이의 성적을 들으면 우리 아이와 비교하게 된다."], ["형제나 친구와 비교하는 말을 한 적이 있다."], ["'누구는 벌써 어디까지 했다더라' 같은 말을 한다."], ["우리 아이만의 속도가 있다고 생각한다.", true]] },
+    { key: "mathBurden", name: "부모 수학 부담", burden: true,
+      tip: "수학 질문은 학원에 맡기셔도 괜찮아요. '엄마(아빠)도 수학 못했어' 같은 말은 피해 주세요.",
+      items: [["나는 학창 시절 수학이 어렵고 싫었다."], ["아이가 수학 문제를 물어보면 부담스럽다."], ["아이 앞에서 '나도 수학 못했어'라고 말한 적이 있다."], ["아이와 수학 이야기를 하는 것이 즐겁다.", true]] },
+    { key: "autonomy", name: "자율 지지", burden: false,
+      tip: "하루 할 일 중 한두 가지는 아이가 직접 정하게 하고, 지켰을 때 인정해 주세요.",
+      items: [["공부 계획을 아이가 스스로 세우게 한다."], ["아이 의견을 듣고 공부 방법을 함께 정한다."], ["아이의 공부를 하나하나 직접 관리한다.", true], ["아이가 실수해도 스스로 해결할 기회를 준다."]] }
+  ],
+  axes: [
+    { key: "M", a: "믿고 맡기는 형", b: "꼼꼼히 챙기는 형" },
+    { key: "F", a: "과정을 보는 형", b: "결과를 보는 형" },
+    { key: "C", a: "격려하는 형", b: "목표를 주는 형" },
+    { key: "Q", a: "빠른 진도 선호", b: "탄탄한 기초 선호" }
+  ],
+  styleItems: [
+    { id: "p1", axis: "M", q: "아이 공부는", a: "아이를 믿고 스스로 하게 둔다", b: "계획부터 하나하나 챙겨 준다" },
+    { id: "p2", axis: "F", q: "시험이 끝나면", a: "어떤 문제가 어려웠는지 먼저 묻는다", b: "몇 점인지 먼저 묻는다" },
+    { id: "p3", axis: "C", q: "아이를 움직이게 하는 말은", a: "'잘하고 있어' 같은 격려", b: "'이번엔 여기까지 해 보자' 같은 목표" },
+    { id: "p4", axis: "Q", q: "학원에 더 바라는 것은", a: "진도를 빨리 나가는 것", b: "기초를 탄탄히 다지는 것" },
+    { id: "p5", axis: "M", q: "아이가 숙제를 안 했을 때", a: "스스로 책임지게 둔다", b: "옆에서 끝낼 때까지 확인한다" },
+    { id: "p6", axis: "F", q: "아이를 칭찬할 때는", a: "노력하는 모습을 칭찬한다", b: "좋은 결과를 칭찬한다" },
+    { id: "p7", axis: "C", q: "아이가 실수했을 때", a: "괜찮다고 다독인다", b: "다음엔 어떻게 할지 짚어 준다" },
+    { id: "p8", axis: "Q", q: "선행 학습은", a: "할 수 있을 때 많이 해 두는 게 좋다", b: "현재 학년을 확실히 하는 게 먼저다" }
+  ],
+  types: {
+    "trust-process": { name: "든든한 응원형", desc: "아이를 믿고 기다리며, 노력하는 과정을 알아봐 주시는 부모님입니다.",
+      tips: ["지금처럼 과정을 칭찬해 주세요. 아이의 자신감을 키우는 가장 큰 힘입니다.", "아이가 방향을 잃을 땐 한 주 목표 한 가지를 함께 정해 주세요."] },
+    "trust-result": { name: "목표 제시형", desc: "아이에게 맡기되 분명한 결과를 기대하시는 부모님입니다.",
+      tips: ["결과가 기대에 못 미칠 때도 아이가 노력한 부분을 먼저 짚어 주세요.", "목표는 아이와 함께 정하면 책임감이 더 커집니다."] },
+    "manage-process": { name: "세심한 코치형", desc: "하나하나 챙기며 아이의 공부 과정을 함께하시는 부모님입니다.",
+      tips: ["아이가 스스로 해 볼 기회를 조금씩 늘려 주세요.", "확인은 '결과 확인' 위주로 하고, 과정은 아이에게 맡겨 보세요."] },
+    "manage-result": { name: "열정 매니저형", desc: "꼼꼼히 관리하고 성과를 중요하게 보시는 부모님입니다.",
+      tips: ["관리와 기대가 압박으로 느껴지지 않도록 칭찬의 비율을 늘려 주세요.", "공부 계획은 아이와 함께 세우고, 지킨 날은 꼭 인정해 주세요."] }
+  },
+  openItems: [
+    { id: "po1", q: "자녀의 가장 큰 강점은 무엇인가요?", ph: "예: 성실해요, 이해가 빨라요", type: "textarea" },
+    { id: "po2", q: "자녀 공부와 관련해 가장 걱정되는 점은?", ph: "자유롭게 적어 주세요", type: "textarea" },
+    { id: "po3", q: "금정수학에 바라는 점이 있다면? (선택)", ph: "자유롭게 적어 주세요", type: "textarea", optional: true }
+  ],
+  /* 부모 요인 ↔ 아이 요인 연결과 해석 문구
+     risk: 부모 쪽 신호(burden 요인 60점 이상, 자율 지지는 45점 미만) / child: 아이 점수 50점 미만 */
+  links: [
+    { p: "worry", c: "anxiety", title: "부모님 학업 걱정 ↔ 아이 시험불안",
+      both: "부모님의 걱정이 아이의 시험 긴장으로 이어지고 있을 수 있어요. 시험 전후로는 점수 대신 '준비한 만큼 하면 돼'라고 말해 주세요.",
+      parent: "아이는 시험 앞에서 비교적 차분해요. 부모님의 걱정이 아이에게 전해지지 않도록 지금처럼 지켜봐 주세요.",
+      child: "부모님은 담담하신데 아이 스스로 시험을 많이 긴장해요. 학원에서 실전 연습으로 긴장을 낮출게요. 집에서는 준비 과정을 칭찬해 주세요.",
+      none: "부모님과 아이 모두 시험을 비교적 편안하게 받아들이고 있어요." },
+    { p: "mathBurden", c: "mathCalm", title: "부모 수학 부담 ↔ 아이 수학 불안",
+      both: "부모님이 느끼시는 수학 부담이 아이에게도 비슷하게 나타나요. '나도 수학 못했어'는 아이에게 '나도 못할 거야'로 들릴 수 있어요.",
+      parent: "부모님은 수학이 부담스러우셨지만 아이는 수학 앞에서 편안해요. 수학 이야기는 긍정적으로 해 주세요.",
+      child: "아이가 수학에 긴장을 많이 해요. 함께 풀 때 틀린 걸 바로 지적하기보다 '어떻게 생각했어?'라고 물어봐 주세요.",
+      none: "부모님과 아이 모두 수학을 편안하게 대하고 있어요." },
+    { p: "outcome", c: "resilience", title: "결과 중심 반응 ↔ 아이 실패 회복력",
+      both: "점수 중심의 반응이 아이의 실패 회복력에 영향을 주고 있을 수 있어요. 시험 뒤 첫마디를 '어떤 문제가 어려웠어?'로 바꿔 보세요.",
+      parent: "아이는 실패해도 잘 일어서는 편이에요. 결과만 보는 반응이 이어지면 이 힘이 약해질 수 있으니 과정도 함께 봐 주세요.",
+      child: "부모님은 과정을 보시는데 아이는 실패에 쉽게 낙담해요. 작은 성공을 함께 축하해 주시면 큰 도움이 돼요.",
+      none: "과정을 보는 분위기 속에서 아이도 실패를 잘 딛고 일어서고 있어요." },
+    { p: "pressure", c: "intrinsic", title: "공부·과제 압박 ↔ 아이 내재동기",
+      both: "재촉하는 분위기 속에서 아이는 공부를 '해야 하는 일'로 느끼고 있어요. 공부량은 아이와 함께 정하고, 지켰으면 더 요구하지 않는 약속을 추천드려요.",
+      parent: "아이는 아직 배우는 재미를 잃지 않았어요. 압박이 커지면 이 재미가 줄 수 있으니 지금의 균형을 지켜 주세요.",
+      child: "압박이 크지 않은데도 아이가 공부 재미를 느끼지 못하고 있어요. 학원에서 성취 경험으로 흥미를 끌어올릴게요.",
+      none: "편안한 분위기 속에서 아이가 배우는 재미를 느끼고 있어요." },
+    { p: "autonomy", c: "plan", title: "자율 지지 ↔ 아이 계획과 실천",
+      both: "아이가 스스로 계획해 본 경험이 부족해요. 처음엔 하루 할 일 한두 가지만 아이가 정하게 하고, 지켰을 때 인정해 주세요.",
+      parent: "아이는 스스로 계획하고 실천하는 힘이 있어요. 조금 더 믿고 맡겨 보셔도 좋아요.",
+      child: "자율을 존중해 주시는데 아이는 아직 계획 습관이 잡히지 않았어요. 학원에서 주간 계획표로 습관을 함께 잡을게요.",
+      none: "믿고 맡겨 주시는 덕분에 아이가 스스로 계획하고 실천하고 있어요." }
+  ],
+  /* 성향 궁합: 아이 성향 축 ↔ 부모 성향 축 (같은 쪽이면 match) */
+  fits: [
+    { c: "D", p: "C", title: "힘이 나는 말", left: "칭찬·격려", right: "목표·도전",
+      match: "아이가 힘을 얻는 방식과 부모님의 말 방식이 잘 맞아요.",
+      ca: "아이는 칭찬에 힘을 얻는데, 부모님은 목표를 먼저 주시는 편이에요. 목표 이야기 전에 잘한 점을 한 가지 먼저 말해 주세요.",
+      cb: "아이는 분명한 목표와 도전에서 힘을 얻어요. 격려와 함께 '이번 주엔 여기까지' 같은 구체적인 목표를 주세요." },
+    { c: "P", p: "Q", title: "공부 속도", left: "빠르게 많이", right: "천천히 탄탄히",
+      match: "공부 속도에 대한 아이의 성향과 부모님의 기대가 비슷해요.",
+      ca: "아이는 빠르게 많이 하고 싶어 하고, 부모님은 기초를 중시하세요. 학원에서 빠른 풀이 뒤에 개념 점검을 꼭 붙일게요.",
+      cb: "아이는 천천히 정확하게 하는 편인데, 부모님은 빠른 진도를 기대하세요. 재촉하면 실수가 늘 수 있어 정확도부터 잡고 속도를 올릴게요." },
+    { c: "S", p: "M", title: "혼자 ↔ 함께", left: "스스로 / 맡김", right: "함께 / 챙김",
+      match: "", matchA: "스스로 하려는 아이를 믿고 맡겨 주시는 좋은 조합이에요.", matchB: "함께할 때 힘이 나는 아이에게 부모님의 관심이 잘 맞아요. 혼자 하는 시간도 조금씩 늘려 주세요.",
+      ca: "아이는 혼자 해결하고 싶어 하는데 부모님은 꼼꼼히 챙기시는 편이에요. 간섭으로 느끼지 않도록 결과만 확인하고 과정은 맡겨 보세요.",
+      cb: "아이는 함께할 때 더 잘하는 편이에요. 가끔 '오늘 뭐 배웠어?' 하고 물어봐 주시는 것만으로도 큰 힘이 돼요." }
+  ]
+};
+GJ_PARENT.factors.forEach(function (f) {
+  f.items = f.items.map(function (it, i) { return { id: f.key + (i + 1), text: it[0], r: !!it[1], factor: f.key }; });
+});
+GJ_PARENT.likertOrder = (function () {
+  var out = [];
+  for (var j = 0; j < 4; j++) GJ_PARENT.factors.forEach(function (f) { out.push(f.items[j]); });
+  return out;
+})();
+
+function gjParentLevel(score, burden) {
+  if (burden) {
+    if (score >= 60) return { key: "low", label: "높음" };
+    if (score >= 40) return { key: "mid", label: "보통" };
+    return { key: "high", label: "낮음" };
+  }
+  if (score >= 60) return { key: "high", label: "높음" };
+  if (score >= 45) return { key: "mid", label: "보통" };
+  return { key: "low", label: "낮음" };
+}
+
+function gjParentScore(answers) {
+  var L = (answers && answers.likert) || {}, S = (answers && answers.style) || {};
+  var factors = GJ_PARENT.factors.map(function (f) {
+    var sum = 0, n = 0;
+    f.items.forEach(function (it) { var v = Number(L[it.id]); if (v >= 1 && v <= 6) { sum += it.r ? 7 - v : v; n++; } });
+    var score = Math.round(((n ? sum / n : 3.5) - 1) / 5 * 100);
+    var risk = f.burden ? score >= 60 : score < 45;
+    return { key: f.key, name: f.name, burden: f.burden, score: score, level: gjParentLevel(score, f.burden), risk: risk, tip: f.tip };
+  });
+  var axes = {};
+  GJ_PARENT.axes.forEach(function (a) { axes[a.key] = 0; });
+  GJ_PARENT.styleItems.forEach(function (it) { axes[it.axis] += Number(S[it.id]) || 0; });
+  var typeKey = (axes.M < 0 ? "trust" : "manage") + "-" + (axes.F < 0 ? "process" : "result");
+  return { factors: factors, axes: axes, typeKey: typeKey, type: GJ_PARENT.types[typeKey],
+    risks: factors.filter(function (f) { return f.risk; }).sort(function (a, b) { return (b.burden ? b.score : 100 - b.score) - (a.burden ? a.score : 100 - a.score); }) };
+}
+
+/* 학생·학부모 짝짓기: 이름+학교+학년이 같고, 둘 다 보호자 연락처가 있으면 연락처도 같아야 함 (동명이인 방지) */
+function gjNorm(s) { return String(s || "").replace(/\s+/g, "").replace(/^'/, ""); }
+function gjSameChild(a, b) {
+  if (!a || !b) return false;
+  if (gjNorm(a.name) !== gjNorm(b.name) || gjNorm(a.school) !== gjNorm(b.school) || gjNorm(a.grade) !== gjNorm(b.grade) || gjNorm(a.level) !== gjNorm(b.level)) return false;
+  var pa = String(a.parentPhone || "").replace(/\D/g, ""), pb = String(b.parentPhone || "").replace(/\D/g, "");
+  return !(pa && pb && pa !== pb);
+}

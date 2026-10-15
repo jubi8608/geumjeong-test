@@ -87,6 +87,28 @@ table.list tr.click:hover td { background: var(--soft) }
 .dcell { font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap }
 .delta { font-weight: 700; font-size: 12.5px; font-variant-numeric: tabular-nums }
 .delta.up { color: var(--good) } .delta.down { color: var(--low) } .delta.same { color: var(--muted) }
+.ptype { background: var(--soft) }
+.axis .dot.pdot { background: var(--ink); border-color: var(--ink); border-radius: 3px; width: 16px; height: 16px; transform: translate(-50%, -50%) rotate(45deg) }
+.lg { display: inline-block; width: 10px; height: 10px; margin: 0 4px 0 8px; vertical-align: -1px }
+.lg.c { background: var(--accent); border: 2px solid var(--ink); border-radius: 50% }
+.lg.p { background: var(--ink); transform: rotate(45deg); width: 9px; height: 9px }
+.fits { display: grid; gap: 12px; margin-bottom: 18px }
+.fit .fit-h { display: flex; gap: 8px; align-items: center; font-size: 14px }
+.fit .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px }
+.fit .line { position: relative; height: 12px; margin: 6px 0 4px; background: var(--soft); border-radius: 6px }
+.fit .dot { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--ink); transform: translate(-50%, -50%) }
+.fit .dot.pdot { background: var(--ink); border-color: var(--ink); border-radius: 3px; width: 15px; height: 15px; transform: translate(-50%, -50%) rotate(45deg) }
+.fit p, .lk p { margin: 2px 0 0; font-size: 13px; color: var(--muted) }
+.links { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 8px }
+.lk { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px }
+.lk.both { border-left: 4px solid var(--low) } .lk.parent, .lk.child { border-left: 4px solid var(--accent) } .lk.none { border-left: 4px solid var(--good) }
+.lk-h { font-weight: 700; font-size: 14px; margin-bottom: 4px }
+.lk-bars { display: grid; grid-template-columns: 44px 1fr 30px 64px 32px 1fr 30px 64px; gap: 8px; align-items: center; font-size: 12.5px }
+.lk-bars .who-l { color: var(--muted) }
+.lk-bars .sc { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums }
+.chip.pair { background: var(--accent-soft); color: var(--ink) }
+.pvoice { grid-template-columns: 1fr 1fr 1fr }
+@media (max-width: 720px) { .lk-bars { grid-template-columns: 44px 1fr 30px 64px } .pvoice { grid-template-columns: 1fr } }
 .chip { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 7px; text-align: center; white-space: nowrap }
 .chip.high { background: var(--good-soft); color: var(--good) }
 .chip.mid { background: var(--mid-soft); color: var(--mid) }
@@ -191,7 +213,7 @@ table.list tr.click:hover td { background: var(--soft) }
 <script src="questions.js"></script>
 <script>
 (function () {
-  var C = GJ_CONFIG, D = GJ_DATA;
+  var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
   var app = document.getElementById("app"), bar = document.getElementById("toolbar");
   var inFrame = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var PW_KEY = "gj-admin-pw";
@@ -224,15 +246,44 @@ table.list tr.click:hover td { background: var(--soft) }
         open: { o1: "일차방정식, 계산 문제", o2: "문장제, 함수 그래프 읽기", o3: "1~2시간", o4: "90점", o5: "문제를 풀 때 실수가 많고, 시험만 보면 긴장해서 아는 것도 틀려요.", o6: "모르는 걸 편하게 물어볼 수 있으면 좋겠어요." } }
     };
   }
-  function sampleOpts(back) { return { back: back, prev: sampleRecord(SAMPLE_BEFORE, 120, "SAMPLE0") }; }
+  function sampleParent() {
+    var t = { worry: 4.6, pressure: 4.4, outcome: 4.3, compare: 3.4, mathBurden: 4.5, autonomy: 2.8 }, lk = {};
+    P.factors.forEach(function (f) {
+      f.items.forEach(function (it, i) { var v = Math.max(1, Math.min(6, Math.round(t[f.key] + (i % 2 ? 0.4 : -0.4)))); lk[it.id] = it.r ? 7 - v : v; });
+    });
+    return { id: "SAMPLEP", role: "parent", submittedAt: new Date().toISOString(),
+      info: { name: "예시 학생", level: "중학교", grade: "2학년", school: "예시중학교", relation: "어머니" },
+      answers: { likert: lk, style: { p1: 1, p2: 1, p3: 2, p4: -1, p5: 2, p6: 1, p7: 1, p8: -1 },
+        open: { po1: "성실하고 숙제는 꼭 해 가요.", po2: "시험만 보면 실수가 많아 점수가 안 나와요. 중학교 와서 수학을 어려워해요.", po3: "기초부터 꼼꼼히 봐 주셨으면 해요." } } };
+  }
+  function sampleOpts(back) { return { back: back, prev: sampleRecord(SAMPLE_BEFORE, 120, "SAMPLE0"), parent: sampleParent() }; }
 
   /* 같은 학생 판별: 이름 + 보호자 연락처 숫자 */
   function personKey(info) { return String((info && info.name) || "").trim() + "|" + String((info && info.parentPhone) || "").replace(/\D/g, ""); }
   function localHistory() { try { return JSON.parse(localStorage.getItem("gj-history")) || []; } catch (e) { return []; } }
   function localPrev(rec) {
     var k = personKey(rec.info), t = new Date(rec.submittedAt).getTime();
-    return localHistory().filter(function (h) { return h.id !== rec.id && personKey(h.info) === k && new Date(h.submittedAt).getTime() < t; })
+    return localHistory().filter(function (h) { return h.role !== "parent" && h.id !== rec.id && personKey(h.info) === k && new Date(h.submittedAt).getTime() < t; })
       .sort(function (a, b) { return new Date(b.submittedAt) - new Date(a.submittedAt); })[0] || null;
+  }
+
+  function localPair(rec) {
+    var want = rec.role === "parent" ? "student" : "parent";
+    return localHistory().filter(function (h) { return (h.role || "student") === want && gjSameChild(h.info, rec.info); })
+      .sort(function (a, b) { return new Date(b.submittedAt) - new Date(a.submittedAt); })[0] || null;
+  }
+  /* 학생/학부모 결과를 받아 알맞은 결과지로 보여 주기 */
+  function show(item, o) {
+    o = o || {};
+    if (item.role === "parent") {
+      if (o.pair) return renderReport(o.pair, { back: o.back, parent: item, prev: o.pairPrev || null });
+      return renderParent(item, o);
+    }
+    renderReport(item, { back: o.back, prev: o.prev || null, parent: o.pair || null });
+  }
+  function showLocal(rec, back) {
+    if (rec.role === "parent") { var kid = localPair(rec); return show(rec, { back: back, pair: kid, pairPrev: kid ? localPrev(kid) : null }); }
+    show(rec, { back: back, prev: localPrev(rec), pair: localPair(rec) });
   }
 
   /* ── 레이더 차트 ── */
@@ -264,12 +315,85 @@ table.list tr.click:hover td { background: var(--soft) }
   function track(score, math) { return '<div class="track' + (math ? " math" : "") + '"><i style="width:' + Math.max(2, score) + '%"></i><span class="bands"><b style="left:45%"></b><b style="left:70%"></b></span></div>'; }
   function chip(lv) { return '<span class="chip ' + lv.key + '">' + lv.label + '</span>'; }
 
+  function side(v) { return v < 0 ? "a" : "b"; }
+  function dualAxis(left, right, cv, pv) {
+    var cp = (cv + 4) / 8, pp = (pv + 4) / 8;
+    return '<div class="ends"><span>' + esc(left) + '</span><span>' + esc(right) + '</span></div><div class="line">' +
+      '<span class="dot pdot" style="left:calc(12px + (100% - 24px) * ' + pp + ')" title="부모님"></span>' +
+      '<span class="dot" style="left:calc(12px + (100% - 24px) * ' + cp + ')" title="아이"></span></div>';
+  }
+  function pairPage(r, info, parentRec, head, foot) {
+    var pr = gjParentScore(parentRec.answers), pinfo = parentRec.info || {}, popen = (parentRec.answers && parentRec.answers.open) || {};
+    var cf = {}; r.factors.forEach(function (f) { cf[f.key] = f; });
+    var pf = {}; pr.factors.forEach(function (f) { pf[f.key] = f; });
+    var fits = P.fits.map(function (ft) {
+      var cv = r.axes[ft.c], pv = pr.axes[ft.p], cs = side(cv), ps = side(pv), msg;
+      if (cs === ps) msg = ft.match || (cs === "a" ? ft.matchA : ft.matchB);
+      else msg = cs === "a" ? ft.ca : ft.cb;
+      return '<div class="fit"><div class="fit-h"><b>' + esc(ft.title) + '</b><span class="chip ' + (cs === ps ? "high" : "mid") + '">' + (cs === ps ? "잘 맞음" : "차이 있음") + '</span></div>' + dualAxis(ft.left, ft.right, cv, pv) + '<p>' + esc(msg) + '</p></div>';
+    }).join("");
+    var homeTips = [];
+    var links = P.links.map(function (ln) {
+      var a = pf[ln.p], b = cf[ln.c], cr = b.score < 50;
+      var kind = a.risk && cr ? "both" : a.risk ? "parent" : cr ? "child" : "none";
+      if (a.risk && homeTips.indexOf(a.tip) < 0) homeTips.push(a.tip);
+      return '<li class="lk ' + kind + '"><div class="lk-h">' + esc(ln.title) + '</div>' +
+        '<div class="lk-bars"><span class="who-l">부모님</span>' + track(a.score) + '<span class="sc">' + a.score + '</span>' + chip(a.level) +
+        '<span class="who-l">아이</span>' + track(b.score) + '<span class="sc">' + b.score + '</span>' + chip(b.level) + '</div>' +
+        '<p>' + esc(ln[kind]) + '</p></li>';
+    }).join("");
+    if (pf.compare.risk) homeTips.push(pf.compare.tip);
+    pr.type.tips.forEach(function (t) { if (homeTips.length < 3) homeTips.push(t); });
+    var pvoice = P.openItems.map(function (it) { var a = popen[it.id]; return a ? '<div><div class="q">' + esc(it.q) + '</div><div class="a">' + esc(a) + '</div></div>' : ""; }).join("");
+    var whoLine = '<div class="who"><div><b>' + esc(info.name) + '</b></div><span>학부모<em>' + esc(pinfo.relation || "보호자") + '</em></span><span>학부모 검사일<em>' + fmtDate(parentRec.submittedAt) + '</em></span></div>';
+    var tipsBox = '<div class="tips"><b>가정에서 이렇게 도와주세요</b><ul>' + homeTips.slice(0, 3).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></div>';
+    return '<section class="sheet">' + head("부모 마음 × 아이 마음 ①") + whoLine +
+      '<div class="two"><div class="type-box"><span class="lab">아이 학습 유형</span><div class="name">' + esc(r.type.name) + '</div><p>' + esc(r.type.desc) + '</p></div>' +
+      '<div class="type-box ptype"><span class="lab">부모님 양육 스타일</span><div class="name">' + esc(pr.type.name) + '</div><p>' + esc(pr.type.desc) + '</p></div></div>' +
+      '<h3 class="sec" style="margin-top:18px">성향 궁합 <small><i class="lg c"></i>아이 <i class="lg p"></i>부모님</small></h3><div class="fits">' + fits + '</div>' +
+      tipsBox +
+      (pvoice ? '<h3 class="sec">학부모님이 적은 이야기</h3><div class="voice pvoice">' + pvoice + '</div>' : '') +
+      foot + '<span class="pgno">%PG%</span></section>' +
+      '<section class="sheet">' + head("부모 마음 × 아이 마음 ②") + whoLine +
+      '<h3 class="sec">서로 연결된 마음 <small>부모님 막대: 높을수록 아이에게 부담 신호(자율 지지는 반대) · 아이 막대: 높을수록 좋음</small></h3><ul class="links">' + links + '</ul>' +
+      '<div class="note" style="margin-top:4px">테두리 색: <b style="color:var(--low)">빨강</b> 부모·아이 모두 신호 · <b>노랑</b> 한쪽만 신호 · <b style="color:var(--good)">초록</b> 둘 다 안정</div>' +
+      foot + '<span class="pgno">%PG%</span></section>';
+  }
+
+  function renderParent(rec, o) {
+    var pr = gjParentScore(rec.answers), info = rec.info || {}, open = (rec.answers && rec.answers.open) || {};
+    var head = '<div class="sheet-head">' + brand() + '<div class="doc"><b>학부모 양육 스타일 진단</b>' + esc(C.TEST_NAME) + ' · 학부모용</div></div>';
+    var foot = '<div class="foot"><span>' + esc(C.ACADEMY) + (C.CONTACT ? " · " + esc(C.CONTACT) : "") + '</span><span>이 검사는 학습 상담을 돕는 자체 진단 도구이며, 양육 방식의 좋고 나쁨을 평가하지 않습니다.</span></div>';
+    var rows = pr.factors.map(function (f) { return '<div class="frow"><span>' + esc(f.name) + '</span>' + track(f.score) + '<span class="sc" style="text-align:right;font-weight:700">' + f.score + '</span>' + chip(f.level) + '</div>'; }).join("");
+    var axes = P.axes.map(function (ax) {
+      var v = pr.axes[ax.key], sd = v < 0 ? "a" : v > 0 ? "b" : "";
+      return '<div class="axis"><div class="ends"><span class="' + (sd === "a" ? "on" : "off") + '">' + esc(ax.a) + '</span><span class="' + (sd === "b" ? "on" : "off") + '">' + esc(ax.b) + '</span></div><div class="line"><span class="dot pdot" style="left:calc(12px + (100% - 24px) * ' + ((v + 4) / 8) + ')"></span></div></div>';
+    }).join("");
+    var tips = pr.risks.map(function (f) { return f.tip; }).concat(pr.type.tips).slice(0, 4);
+    var voice = P.openItems.map(function (it) { var a = open[it.id]; return a ? '<div class="wide"><div class="q">' + esc(it.q) + '</div><div class="a">' + esc(a) + '</div></div>' : ""; }).join("");
+    app.innerHTML = '<section class="sheet">' + head +
+      '<div class="who"><div><b>' + esc(info.name) + '</b> <span style="font-size:15px">학생 ' + esc(info.relation || "보호자") + '</span></div><span>학교<em>' + esc(info.school) + '</em></span><span>학년<em>' + esc((info.level === "초등학교" ? "초" : "중") + " " + (info.grade || "")) + '</em></span><span>검사일<em>' + fmtDate(rec.submittedAt) + '</em></span></div>' +
+      '<div class="type-box ptype" style="margin-bottom:20px"><span class="lab">양육 스타일</span><div class="name">' + esc(pr.type.name) + '</div><p>' + esc(pr.type.desc) + '</p></div>' +
+      '<h3 class="sec">자녀 공부를 대하는 모습 <small>자녀 학업 걱정~수학 부담: 높을수록 아이에게 부담 신호 · 자율 지지: 높을수록 도움</small></h3>' + rows +
+      '<h3 class="sec" style="margin-top:18px">양육 성향</h3><div class="axes">' + axes + '</div>' +
+      '<div class="tips"><b>아이를 위해 이렇게 해 보세요</b><ul>' + tips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></div>' +
+      (voice ? '<h3 class="sec">학부모님이 적은 이야기</h3><div class="voice">' + voice + '</div>' : '') +
+      '<p class="note noprint">자녀가 같은 이름·학교·학년(그리고 같은 보호자 연락처)으로 검사하면, 자녀 결과지에 \'부모 마음 × 아이 마음\' 쪽이 자동으로 붙어요.</p>' +
+      foot + '<span class="pgno">1 / 1</span></section>';
+    document.title = (info.name || "학생") + " 학부모 양육 스타일 - " + C.ACADEMY;
+    bar.innerHTML = '<span class="row">' + (o.back ? '<button class="btn" id="back">← 목록</button>' : '') + '<span class="title">' + esc(info.name) + ' 학부모 결과지</span></span>' +
+      (inFrame ? '<span class="muted" style="font-size:13px">PDF 저장은 홈페이지에 올린 주소에서 작동해요</span>' : '<button class="btn primary" id="pdf">PDF로 저장 · 인쇄</button>');
+    var b = document.getElementById("back"); if (b) b.onclick = o.back;
+    var pd = document.getElementById("pdf"); if (pd) pd.onclick = function () { window.print(); };
+    window.scrollTo(0, 0);
+  }
+
   function delta(v) { return v > 0 ? '<span class="delta up">▲' + v + '</span>' : v < 0 ? '<span class="delta down">▼' + (-v) + '</span>' : '<span class="delta same">-</span>'; }
 
   function renderReport(rec, opts) {
     var r = gjScore(rec.answers), info = rec.info || {}, open = (rec.answers && rec.answers.open) || {};
     var prev = opts.prev || null, pr = prev ? gjScore(prev.answers) : null;
-    var TOTAL = prev ? 4 : 3;
+    var parent = opts.parent || null;
     var date = fmtDate(rec.submittedAt || Date.now());
     var head = function (title) {
       return '<div class="sheet-head">' + brand() + '<div class="doc"><b>' + title + '</b>' + esc(C.TEST_NAME) + ' · ' + esc(info.level === "초등학교" ? "초등용" : "중등용") + '</div></div>';
@@ -289,7 +413,7 @@ table.list tr.click:hover td { background: var(--soft) }
         r.strengths.map(function (f, i) { return '<li><span class="n">' + (i + 1) + '</span><div><div class="t">' + esc(f.name) + '</div><div class="d">' + esc(f.good) + '</div></div><span class="s">' + f.score + '</span></li>'; }).join("") +
       '</ol></div><div><h3 class="sec">관심이 필요한 요인 3</h3><ol class="rank bad">' +
         r.weak.map(function (f, i) { var dn = D.domains.filter(function (d) { return d.key === f.domain; })[0].name; return '<li><span class="n">' + (i + 1) + '</span><div><div class="t">' + esc(f.name) + '</div><div class="d">' + esc(dn) + ' 영역</div></div><span class="s">' + f.score + '</span></li>'; }).join("") +
-      '</ol></div></div>' + foot + '<span class="pgno">1 / ' + TOTAL + '</span></section>';
+      '</ol></div></div>' + foot + '<span class="pgno">%PG%</span></section>';
 
     // 2쪽
     var groups = D.domains.map(function (d) {
@@ -310,7 +434,7 @@ table.list tr.click:hover td { background: var(--soft) }
       '<h3 class="sec">16개 요인 점수 <small>막대의 세로선: 45점 · 70점</small></h3><div class="fgrid">' + groups + '</div>' +
       '<h3 class="sec" style="margin-top:18px">나의 학습 성향 <small>좋고 나쁨이 아닌 스타일의 차이</small></h3><div class="axes">' + axes + '</div>' +
       '<h3 class="sec">학생이 직접 쓴 이야기</h3><div class="voice">' + (voiceItems || '<div class="muted">작성한 내용이 없습니다.</div>') + '</div>' +
-      foot + '<span class="pgno">2 / ' + TOTAL + '</span></section>';
+      foot + '<span class="pgno">%PG%</span></section>';
 
     // 3쪽
     var focus = r.focus.length ? r.focus : r.weak;
@@ -322,7 +446,7 @@ table.list tr.click:hover td { background: var(--soft) }
       '</ul>' +
       '<div class="tips"><b>' + esc(r.type.name) + ' 학생, 이렇게 가르치면 잘 따라와요</b><ul>' + r.type.tips.concat(axTips).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></div>' +
       '<h3 class="sec">상담 메모</h3><div class="memo">' + '<div class="ln"></div>'.repeat(6) + '</div>' +
-      foot + '<span class="pgno">3 / ' + TOTAL + '</span></section>';
+      foot + '<span class="pgno">%PG%</span></section>';
 
     // 4쪽: 재검사 변화 (이전 검사가 있을 때만)
     var p4 = "";
@@ -343,9 +467,11 @@ table.list tr.click:hover td { background: var(--soft) }
         '<div class="two"><div><h3 class="sec">가장 많이 좋아진 요인</h3>' + (up.length ? '<ol class="rank good">' + up.map(li).join("") + '</ol>' : '<p class="muted">점수가 오른 요인이 없습니다.</p>') + '</div>' +
         '<div><h3 class="sec">다시 살펴볼 요인</h3>' + (down.length ? '<ol class="rank bad">' + down.map(li).join("") + '</ol>' : '<p class="muted">점수가 떨어진 요인이 없습니다.</p>') + '</div></div>' +
         '<h3 class="sec" style="margin-top:18px">원장님 코멘트</h3><div class="memo">' + '<div class="ln"></div>'.repeat(3) + '</div>' +
-        foot + '<span class="pgno">4 / 4</span></section>';
+        foot + '<span class="pgno">%PG%</span></section>';
     }
-    app.innerHTML = p1 + p2 + p3 + p4;
+    var pp = parent ? pairPage(r, info, parent, head, foot) : "";
+    var html = [p1, p2, p3, pp, p4].join(""), total = (html.match(/%PG%/g) || []).length, k = 0;
+    app.innerHTML = html.replace(/%PG%/g, function () { k++; return k + " / " + total; });
     document.title = (info.name || "학생") + " 학습심리 진단 결과 - " + C.ACADEMY;
 
     bar.innerHTML = '<span class="row">' + (opts.back ? '<button class="btn" id="back">← 목록</button>' : '') + '<span class="title">' + esc(info.name) + ' 결과지</span></span>' +
@@ -362,7 +488,7 @@ table.list tr.click:hover td { background: var(--soft) }
     app.innerHTML = '<div class="panel"><h1>미리보기 모드</h1><p class="muted">아직 앱스 스크립트 주소(config.js의 API_URL)가 연결되지 않았어요. 연결하면 이 화면이 비밀번호 로그인과 학생 목록으로 바뀝니다.</p>' +
       '<div class="row" style="margin-top:14px"><button class="btn primary" id="sample">예시 학생 결과지 보기</button>' + (local ? '<button class="btn" id="mine">방금 한 검사 결과 보기</button>' : '') + '<a class="btn" href="./">검사 화면으로</a></div></div>';
     document.getElementById("sample").onclick = function () { renderReport(sampleRecord(), sampleOpts(previewHome)); };
-    var m = document.getElementById("mine"); if (m) m.onclick = function () { renderReport(local, { back: previewHome, prev: localPrev(local) }); };
+    var m = document.getElementById("mine"); if (m) m.onclick = function () { showLocal(local, previewHome); };
   }
 
   /* ── 원장님 로그인·목록 ── */
@@ -394,7 +520,7 @@ table.list tr.click:hover td { background: var(--soft) }
     document.getElementById("out").onclick = function () { setPw(""); login(); };
     var rows = cache.filter(function (it) { return !q || (it.name + it.school).indexOf(q) >= 0; });
     app.innerHTML = '<div class="panel"><input type="search" id="q" placeholder="이름이나 학교로 찾기" value="' + esc(q) + '"><div class="tablewrap"><table class="list"><thead><tr><th>제출일</th><th>이름</th><th>학교</th><th>학년</th><th>종합</th><th>학습 유형</th></tr></thead><tbody>' +
-      (rows.length ? rows.map(function (it) { return '<tr class="click" data-id="' + esc(it.id) + '" tabindex="0"><td>' + fmtDate(it.ts) + '</td><td><b>' + esc(it.name) + '</b>' + (it.round > 1 ? ' <span class="chip high">' + it.round + '회차</span>' : '') + '</td><td>' + esc(it.school) + '</td><td>' + esc(it.grade) + '</td><td>' + esc(it.overall) + '</td><td>' + esc(it.type) + '</td></tr>'; }).join("")
+      (rows.length ? rows.map(function (it) { return '<tr class="click" data-id="' + esc(it.id) + '" tabindex="0"><td>' + fmtDate(it.ts) + '</td><td><b>' + esc(it.name) + '</b>' + (it.role === "parent" ? ' <span class="chip mid">학부모</span>' : '') + (it.round > 1 ? ' <span class="chip high">' + it.round + '회차</span>' : '') + (it.paired && it.role !== "parent" ? ' <span class="chip pair">부모 검사 ✓</span>' : '') + '</td><td>' + esc(it.school) + '</td><td>' + esc(it.grade) + '</td><td>' + esc(it.overall) + '</td><td>' + esc(it.type) + '</td></tr>'; }).join("")
         : '<tr><td colspan="6" class="muted">아직 제출된 검사가 없어요. 학생이 검사를 마치면 여기에 나타나요.</td></tr>') +
       '</tbody></table></div></div>';
     var qi = document.getElementById("q");
@@ -408,7 +534,7 @@ table.list tr.click:hover td { background: var(--soft) }
     app.innerHTML = '<div class="panel muted">결과지를 불러오는 중…</div>';
     api({ action: "get", id: id, key: getPw() }).then(function (j) {
       if (!j.ok) throw new Error(j.error);
-      renderReport(j.item, { prev: j.prev || null, back: function () { if (cache) drawList(""); else list(); } });
+      show(j.item, { prev: j.prev || null, pair: j.pair || null, pairPrev: j.pairPrev || null, back: function () { if (cache) drawList(""); else list(); } });
     }).catch(function (e) { app.innerHTML = '<div class="panel"><p class="err">결과지를 불러오지 못했어요. (' + esc(e.message) + ')</p><button class="btn" id="bk">목록으로</button></div>'; document.getElementById("bk").onclick = list; });
   }
 
@@ -418,7 +544,7 @@ table.list tr.click:hover td { background: var(--soft) }
   if (hash === "demo") renderReport(sampleRecord(), sampleOpts(C.API_URL ? function () { list(); } : previewHome));
   else if (hash === "local") {
     var rec = null; try { rec = JSON.parse(localStorage.getItem("gj-last-result")); } catch (e) {}
-    rec ? renderReport(rec, { back: previewHome, prev: localPrev(rec) }) : previewHome();
+    rec ? showLocal(rec, previewHome) : previewHome();
   }
   else if (!C.API_URL) previewHome();
   else if (qid && getPw()) openOne(decodeURIComponent(qid));

@@ -97,6 +97,13 @@ textarea { min-height: 96px; resize: vertical }
 .btn:focus-visible { outline: 3px solid var(--sel); outline-offset: 2px }
 .btn[disabled] { opacity: .6; cursor: default }
 .section-tag { display: inline-block; background: var(--accent-soft); color: var(--ink); font-size: 13px; font-weight: 700; border-radius: 6px; padding: 3px 10px; margin-top: 20px }
+.roles { display: grid; gap: 10px; margin-top: 8px }
+.role { font: inherit; color: var(--ink); text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px; cursor: pointer; display: grid; gap: 4px }
+.role b { font-family: var(--display); font-size: 20px }
+.role span { color: var(--muted); font-size: 14px }
+.role:hover { border-color: var(--accent) }
+.role#r-student { border: 2px solid var(--accent) }
+.role:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px }
 .done { text-align: center; padding-top: 40px }
 .done .mark { width: 72px; height: 72px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; margin: 0 auto; font-size: 36px; font-weight: 700 }
 .note { font-size: 13px; color: var(--muted); background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; margin-top: 16px; text-align: left }
@@ -116,18 +123,38 @@ textarea { min-height: 96px; resize: vertical }
 <script src="questions.js"></script>
 <script>
 (function () {
-  var C = GJ_CONFIG, D = GJ_DATA;
+  var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
   var KEY = "gj-test-v1", PER_PAGE = 8;
-  var LPAGES = Math.ceil(D.likertOrder.length / PER_PAGE);
-  var STEP_INFO = 1, STEP_L0 = 2, STEP_STYLE = STEP_L0 + LPAGES, STEP_OPEN = STEP_STYLE + 1, STEP_DONE = STEP_OPEN + 1;
-  var TOTAL_Q = D.likertOrder.length + D.styleItems.length + D.openItems.length;
+
+  /* 역할(학생/학부모)에 따라 바뀌는 검사 구성 */
+  function M() {
+    if (st.role === "parent") return {
+      order: P.likertOrder, style: P.styleItems, open: P.openItems,
+      text: function (it) { return it.text; }, styleItem: function (it) { return it; }, openItem: function (it) { return it; },
+      sec1: "자녀 공부를 대하는 나", sec2: "나의 양육 성향", sec3: "자녀에 대해 적기"
+    };
+    return {
+      order: D.likertOrder, style: D.styleItems, open: D.openItems,
+      text: function (it) { return gjItemText(it, st.info.level); },
+      styleItem: function (it) { return gjStyleItem(it, st.info.level); },
+      openItem: function (it) { return gjOpenItem(it, st.info.level); },
+      sec1: "나의 공부 마음", sec2: "나의 학습 성향", sec3: "나에 대해 적기"
+    };
+  }
+  var STEP_INFO = 1, STEP_L0 = 2;
+  function LPAGES() { return Math.ceil(M().order.length / PER_PAGE); }
+  function STEP_STYLE() { return STEP_L0 + LPAGES(); }
+  function STEP_OPEN() { return STEP_STYLE() + 1; }
+  function STEP_DONE() { return STEP_OPEN() + 1; }
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
   function newId() { return "GJ" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(); }
+  function fresh() { return { step: 0, role: "student", id: newId(), info: {}, likert: {}, style: {}, open: {}, sent: false }; }
 
-  var st = load() || { step: 0, id: newId(), info: {}, likert: {}, style: {}, open: {}, sent: false };
+  var st = load() || fresh();
+  if (!st.role) st.role = "student";
   var app = document.getElementById("app");
 
   document.getElementById("brand").innerHTML = C.LOGO_URL
@@ -135,68 +162,91 @@ textarea { min-height: 96px; resize: vertical }
     : '<span class="ko">' + esc(C.ACADEMY) + '</span><span class="en">' + esc(C.ACADEMY_EN) + '</span>';
 
   function progress() {
-    var bw = document.getElementById("barWrap"), si = document.getElementById("stepinfo");
-    var on = st.step >= STEP_INFO && st.step < STEP_DONE;
+    var bw = document.getElementById("barWrap"), si = document.getElementById("stepinfo"), m = M();
+    var on = st.step >= STEP_INFO && st.step < STEP_DONE();
     bw.hidden = si.hidden = !on;
     if (!on) return;
     var answered = Object.keys(st.likert).length + Object.keys(st.style).length;
-    document.getElementById("bar").style.width = Math.round(answered / (D.likertOrder.length + D.styleItems.length) * 100) + "%";
-    var name = st.step === STEP_INFO ? "기본 정보" : st.step < STEP_STYLE ? "나의 공부 마음" : st.step === STEP_STYLE ? "나의 학습 성향" : "나에 대해 적기";
+    document.getElementById("bar").style.width = Math.round(answered / (m.order.length + m.style.length) * 100) + "%";
+    var name = st.step === STEP_INFO ? "기본 정보" : st.step < STEP_STYLE() ? m.sec1 : st.step === STEP_STYLE() ? m.sec2 : m.sec3;
     document.getElementById("stepName").textContent = name;
-    document.getElementById("stepCount").textContent = st.step >= STEP_L0 && st.step < STEP_STYLE ? (st.step - STEP_L0 + 1) + " / " + LPAGES + " 쪽" : "";
+    document.getElementById("stepCount").textContent = st.step >= STEP_L0 && st.step < STEP_STYLE() ? (st.step - STEP_L0 + 1) + " / " + LPAGES() + " 쪽" : "";
   }
 
-  function go(step) { st.step = step; save(); render(); window.scrollTo(0, 0); }
+  function go(step) { if (step >= STEP_INFO && step < STEP_DONE()) st.lastStep = step; st.step = step; save(); render(); window.scrollTo(0, 0); }
 
   function render() {
+    app.oninput = null; app.onchange = null;
     progress();
     if (st.step === 0) return renderIntro();
-    if (st.step === STEP_INFO) return renderInfo();
-    if (st.step < STEP_STYLE) return renderLikert(st.step - STEP_L0);
-    if (st.step === STEP_STYLE) return renderStyle();
-    if (st.step === STEP_OPEN) return renderOpen();
+    if (st.step === STEP_INFO) return st.role === "parent" ? renderParentInfo() : renderInfo();
+    if (st.step < STEP_STYLE()) return renderLikert(st.step - STEP_L0);
+    if (st.step === STEP_STYLE()) return renderStyle();
+    if (st.step === STEP_OPEN()) return renderOpen();
     return renderDone();
   }
 
   function renderIntro() {
-    var resume = Object.keys(st.likert).length > 0;
+    var resume = Object.keys(st.likert).length > 0 || (st.lastStep && st.lastStep > STEP_INFO);
+    var sq = D.likertOrder.length + D.styleItems.length + D.openItems.length;
+    var pq = P.likertOrder.length + P.styleItems.length + P.openItems.length;
     app.innerHTML =
       '<h1>' + esc(C.ACADEMY) + ' ' + esc(C.TEST_NAME) + '</h1>' +
-      '<p class="lead">나는 어떤 마음으로, 어떤 방식으로 공부하고 있을까요? 정답이 없는 검사예요. 평소의 나를 떠올리며 솔직하게 답해 주세요. 솔직할수록 나에게 맞는 공부 방법이 정확하게 보여요.</p>' +
-      '<div class="facts"><div class="fact"><b>12분</b><span>예상 시간</span></div><div class="fact"><b>' + TOTAL_Q + '</b><span>문항</span></div><div class="fact"><b>자동</b><span>중간 저장</span></div></div>' +
-      '<ul class="parts">' +
-      '<li><b>나의 공부 마음</b><span>동기, 습관, 공부 방법, 마음, 환경, 수학에 대한 마음 (64문항)</span></li>' +
-      '<li><b>나의 학습 성향</b><span>둘 중 어느 쪽에 가까운지 고르기 (8문항)</span></li>' +
-      '<li><b>나에 대해 적기</b><span>자신 있는 단원, 고민 등 짧게 쓰기 (6문항)</span></li></ul>' +
-      '<p class="lead">결과는 상담 때 원장님이 직접 설명해 드려요.</p>' +
-      '<div class="nav"><button class="btn primary" id="start">' + (resume ? "이어서 하기" : "검사 시작하기") + '</button></div>';
-    document.getElementById("start").onclick = function () { go(resume ? Math.max(st.lastStep || STEP_INFO, STEP_INFO) : STEP_INFO); };
+      '<p class="lead">정답이 없는 검사예요. 평소의 모습을 떠올리며 솔직하게 답해 주세요. 솔직할수록 아이에게 맞는 공부 방법이 정확하게 보여요. 결과는 상담 때 원장님이 직접 설명해 드려요.</p>' +
+      (resume ? '<div class="note" style="margin-bottom:16px"><b>' + (st.role === "parent" ? "학부모 검사" : "학생 검사") + '</b>를 하던 중이에요.<div class="nav"><button class="btn primary" id="resume" style="flex:1">이어서 하기</button><button class="btn" id="reset">처음부터</button></div></div>' : '') +
+      '<div class="roles">' +
+        '<button class="role" id="r-student"><b>학생 검사</b><span>나의 공부 마음과 학습 성향 · 약 12분 · ' + sq + '문항</span></button>' +
+        '<button class="role" id="r-parent"><b>학부모 검사</b><span>자녀 공부를 대하는 나의 양육 스타일 · 약 5분 · ' + pq + '문항</span></button>' +
+      '</div>' +
+      '<p class="lead" style="font-size:14px;margin-top:16px">학생과 학부모님이 함께 검사하면, 결과지에서 아이와 부모님의 성향을 나란히 비교해 볼 수 있어요.</p>';
+    function startAs(role) { st = fresh(); st.role = role; go(STEP_INFO); }
+    document.getElementById("r-student").onclick = function () { startAs("student"); };
+    document.getElementById("r-parent").onclick = function () { startAs("parent"); };
+    var rs = document.getElementById("resume"); if (rs) rs.onclick = function () { go(Math.max(st.lastStep || STEP_INFO, STEP_INFO)); };
+    var rr = document.getElementById("reset"); if (rr) rr.onclick = function () { st = fresh(); save(); render(); };
+  }
+
+  function consentBox(checked, items, extra) {
+    return '<div class="consent"><dl>' +
+      '<dt>수집 항목</dt><dd>' + items + '</dd>' +
+      '<dt>이용 목적</dt><dd>학습 상담과 학습 지도</dd>' +
+      '<dt>보유 기간</dt><dd>' + esc(C.PRIVACY_KEEP) + ' (요청하면 바로 삭제)</dd></dl>' +
+      '<label class="check"><input type="checkbox" id="f-consent"' + (checked ? " checked" : "") + '><span>위 내용을 확인했고, 개인정보 수집·이용에 동의합니다.' + (extra || "") + '</span></label></div>';
+  }
+  function levelGrade(i, nameLabel) {
+    var level = i.level || "중학교";
+    var grades = level === "초등학교" ? [4, 5, 6] : [1, 2, 3];
+    return '<div class="field"><span class="lbl">' + nameLabel + '학교 구분<span class="req">*</span></span><div class="seg" role="radiogroup">' +
+        ["초등학교", "중학교"].map(function (lv, k) { return '<input type="radio" name="level" id="lv' + k + '" value="' + lv + '"' + (lv === level ? " checked" : "") + '><label for="lv' + k + '">' + lv + '</label>'; }).join("") + '</div></div>' +
+      '<div class="field"><label for="f-grade">' + nameLabel + '학년<span class="req">*</span></label><select id="f-grade">' +
+        grades.map(function (g) { return '<option value="' + g + '학년"' + (i.grade === g + "학년" ? " selected" : "") + '>' + g + '학년</option>'; }).join("") + '</select></div>' +
+      '<div class="field"><label for="f-school">' + nameLabel + '학교 이름<span class="req">*</span></label><input type="text" id="f-school" placeholder="예: 금정중학교" value="' + esc(i.school) + '"></div>';
+  }
+  function bindLevel(rerender, collect) {
+    Array.prototype.forEach.call(document.querySelectorAll('input[name=level]'), function (r) {
+      r.onchange = function () { collect(); st.info.level = r.value; st.info.grade = ""; save(); rerender(); };
+    });
+  }
+  function validate(s, nameMsg) {
+    var digits = String(s.parentPhone || "").replace(/\D/g, "");
+    if (!s.name) return nameMsg;
+    if (!s.school) return "학교 이름을 적어 주세요.";
+    if (digits.length < 9 || digits.length > 11) return "보호자 연락처를 숫자로 정확히 적어 주세요.";
+    if (!s.consent) return "개인정보 수집·이용에 동의해야 검사를 시작할 수 있어요.";
+    return "";
   }
 
   function renderInfo() {
     var i = st.info;
-    var level = i.level || "중학교";
-    var grades = level === "초등학교" ? [4, 5, 6] : [1, 2, 3];
     app.innerHTML =
       '<h2>기본 정보</h2><p class="lead">결과지에 들어갈 정보예요.</p>' +
       '<div class="field"><label for="f-name">이름<span class="req">*</span></label><input type="text" id="f-name" autocomplete="name" value="' + esc(i.name) + '"></div>' +
-      '<div class="field"><span class="lbl">학교 구분<span class="req">*</span></span><div class="seg" role="radiogroup">' +
-        ["초등학교", "중학교"].map(function (lv, k) { return '<input type="radio" name="level" id="lv' + k + '" value="' + lv + '"' + (lv === level ? " checked" : "") + '><label for="lv' + k + '">' + lv + '</label>'; }).join("") + '</div></div>' +
-      '<div class="field"><label for="f-grade">학년<span class="req">*</span></label><select id="f-grade">' +
-        grades.map(function (g) { return '<option value="' + g + '학년"' + (i.grade === g + "학년" ? " selected" : "") + '>' + g + '학년</option>'; }).join("") + '</select></div>' +
-      '<div class="field"><label for="f-school">학교 이름<span class="req">*</span></label><input type="text" id="f-school" placeholder="예: 금정중학교" value="' + esc(i.school) + '"></div>' +
+      levelGrade(i, "") +
       '<div class="field"><label for="f-pphone">보호자 연락처<span class="req">*</span></label><input type="tel" id="f-pphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.parentPhone) + '"></div>' +
       '<div class="field"><label for="f-sphone">학생 연락처 <small>(선택)</small></label><input type="tel" id="f-sphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.studentPhone) + '"></div>' +
-      '<div class="consent"><dl>' +
-        '<dt>수집 항목</dt><dd>이름, 학교, 학년, 연락처, 검사 응답</dd>' +
-        '<dt>이용 목적</dt><dd>학습 상담과 학습 지도</dd>' +
-        '<dt>보유 기간</dt><dd>' + esc(C.PRIVACY_KEEP) + ' (요청하면 바로 삭제)</dd></dl>' +
-        '<label class="check"><input type="checkbox" id="f-consent"' + (i.consent ? " checked" : "") + '><span>위 내용을 확인했고, 개인정보 수집·이용에 동의합니다. 만 14세 미만 학생은 보호자가 함께 확인하고 동의해 주세요.</span></label></div>' +
+      consentBox(i.consent, "이름, 학교, 학년, 연락처, 검사 응답", " 만 14세 미만 학생은 보호자가 함께 확인하고 동의해 주세요.") +
       '<p class="err" id="err"></p>' +
       '<div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음</button></div>';
-    Array.prototype.forEach.call(document.querySelectorAll('input[name=level]'), function (r) {
-      r.onchange = function () { collect(); st.info.level = r.value; st.info.grade = ""; save(); renderInfo(); };
-    });
     function collect() {
       st.info = {
         name: document.getElementById("f-name").value.trim(),
@@ -209,35 +259,69 @@ textarea { min-height: 96px; resize: vertical }
       };
       save();
     }
+    bindLevel(renderInfo, collect);
     app.oninput = collect;
     document.getElementById("prev").onclick = function () { collect(); go(0); };
     document.getElementById("next").onclick = function () {
       collect();
-      var e = "", s = st.info, digits = s.parentPhone.replace(/\D/g, "");
-      if (!s.name) e = "이름을 적어 주세요.";
-      else if (!s.school) e = "학교 이름을 적어 주세요.";
-      else if (digits.length < 9 || digits.length > 11) e = "보호자 연락처를 숫자로 정확히 적어 주세요.";
-      else if (!s.consent) e = "개인정보 수집·이용에 동의해야 검사를 시작할 수 있어요.";
+      var e = validate(st.info, "이름을 적어 주세요.");
+      document.getElementById("err").textContent = e;
+      if (!e) { st.info.consentAt = new Date().toISOString(); go(STEP_L0); }
+    };
+  }
+
+  function renderParentInfo() {
+    var i = st.info;
+    var rel = i.relation || "어머니";
+    app.innerHTML =
+      '<h2>기본 정보</h2><p class="lead">자녀 정보를 자녀가 검사할 때와 똑같이 적어 주세요. 자녀 결과지와 자동으로 연결돼요.</p>' +
+      '<div class="field"><label for="f-name">자녀 이름<span class="req">*</span></label><input type="text" id="f-name" value="' + esc(i.name) + '"></div>' +
+      levelGrade(i, "자녀 ") +
+      '<div class="field"><span class="lbl">자녀와의 관계<span class="req">*</span></span><div class="seg" role="radiogroup">' +
+        ["어머니", "아버지", "기타 보호자"].map(function (r, k) { return '<input type="radio" name="rel" id="rel' + k + '" value="' + r + '"' + (r === rel ? " checked" : "") + '><label for="rel' + k + '">' + r + '</label>'; }).join("") + '</div></div>' +
+      '<div class="field"><label for="f-pphone">보호자 연락처<span class="req">*</span></label><input type="tel" id="f-pphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.parentPhone) + '"><small>자녀가 검사할 때 적은 보호자 연락처와 같은 번호를 적어 주세요.</small></div>' +
+      consentBox(i.consent, "자녀 이름·학교·학년, 보호자 연락처, 검사 응답") +
+      '<p class="err" id="err"></p>' +
+      '<div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음</button></div>';
+    function collect() {
+      st.info = {
+        name: document.getElementById("f-name").value.trim(),
+        level: (document.querySelector('input[name=level]:checked') || {}).value || "중학교",
+        grade: document.getElementById("f-grade").value,
+        school: document.getElementById("f-school").value.trim(),
+        relation: (document.querySelector('input[name=rel]:checked') || {}).value || "어머니",
+        parentPhone: document.getElementById("f-pphone").value.trim(),
+        consent: document.getElementById("f-consent").checked
+      };
+      save();
+    }
+    bindLevel(renderParentInfo, collect);
+    app.oninput = collect; app.onchange = collect;
+    document.getElementById("prev").onclick = function () { collect(); go(0); };
+    document.getElementById("next").onclick = function () {
+      collect();
+      var e = validate(st.info, "자녀 이름을 적어 주세요.");
       document.getElementById("err").textContent = e;
       if (!e) { st.info.consentAt = new Date().toISOString(); go(STEP_L0); }
     };
   }
 
   function renderLikert(p) {
-    var items = D.likertOrder.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
-    var html = (p === 0 ? '<span class="section-tag">나의 공부 마음</span><p class="lead" style="margin-top:8px">각 문장이 평소의 나와 얼마나 비슷한지 골라 주세요.</p>' : '');
+    var m = M(), order = m.order;
+    var items = order.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
+    var guide = st.role === "parent" ? "각 문장이 평소의 나와 얼마나 비슷한지 골라 주세요. 좋고 나쁜 답은 없어요." : "각 문장이 평소의 나와 얼마나 비슷한지 골라 주세요.";
+    var html = (p === 0 ? '<span class="section-tag">' + m.sec1 + '</span><p class="lead" style="margin-top:8px">' + guide + '</p>' : '');
     items.forEach(function (it, k) {
       var n = p * PER_PAGE + k + 1;
-      html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + n + ' / ' + D.likertOrder.length + '</legend><div class="qtext">' + esc(gjItemText(it, st.info.level)) + '</div><div class="likert">';
+      html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + n + ' / ' + order.length + '</legend><div class="qtext">' + esc(m.text(it)) + '</div><div class="likert">';
       for (var v = 1; v <= 6; v++) {
         var idv = it.id + "_" + v;
         html += '<input type="radio" name="' + it.id + '" id="' + idv + '" value="' + v + '"' + (st.likert[it.id] == v ? " checked" : "") + '><label for="' + idv + '" title="' + D.scale[v - 1] + '">' + v + '</label>';
       }
       html += '</div><div class="ends"><span>전혀 아니다</span><span>매우 그렇다</span></div></fieldset>';
     });
-    html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">' + (p === LPAGES - 1 ? "다음 단계로" : "다음") + '</button></div>';
+    html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">' + (p === LPAGES() - 1 ? "다음 단계로" : "다음") + '</button></div>';
     app.innerHTML = html;
-    app.oninput = null;
     app.onchange = function (e) {
       var t = e.target; if (t.type !== "radio") return;
       st.likert[t.name] = Number(t.value); save(); progress();
@@ -257,10 +341,11 @@ textarea { min-height: 96px; resize: vertical }
   }
 
   function renderStyle() {
-    var html = '<span class="section-tag">나의 학습 성향</span><p class="lead" style="margin-top:8px">좋고 나쁜 답은 없어요. 두 문장 중 나와 더 가까운 쪽의 동그라미를 골라 주세요. 가까울수록 큰 동그라미예요.</p>';
-    D.styleItems.forEach(function (it0, k) {
-      var it = gjStyleItem(it0, st.info.level);
-      html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + (k + 1) + ' / ' + D.styleItems.length + '</legend><div class="style-q">' + esc(it.q) + '</div><div class="style-row">' +
+    var m = M();
+    var html = '<span class="section-tag">' + m.sec2 + '</span><p class="lead" style="margin-top:8px">좋고 나쁜 답은 없어요. 두 문장 중 나와 더 가까운 쪽의 동그라미를 골라 주세요. 가까울수록 큰 동그라미예요.</p>';
+    m.style.forEach(function (it0, k) {
+      var it = m.styleItem(it0);
+      html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + (k + 1) + ' / ' + m.style.length + '</legend><div class="style-q">' + esc(it.q) + '</div><div class="style-row">' +
         '<div class="opt a" data-side="왼쪽">' + esc(it.a) + '</div><div class="style4">';
       D.styleScale.forEach(function (o) {
         var idv = it.id + "_" + (o.v + 2);
@@ -277,21 +362,22 @@ textarea { min-height: 96px; resize: vertical }
     };
     document.getElementById("prev").onclick = function () { go(st.step - 1); };
     document.getElementById("next").onclick = function () {
-      var miss = D.styleItems.filter(function (it) { return st.style[it.id] === undefined; });
-      D.styleItems.forEach(function (it) { document.getElementById("c-" + it.id).classList.toggle("missing", st.style[it.id] === undefined); });
+      var miss = m.style.filter(function (it) { return st.style[it.id] === undefined; });
+      m.style.forEach(function (it) { document.getElementById("c-" + it.id).classList.toggle("missing", st.style[it.id] === undefined); });
       if (miss.length) {
         document.getElementById("err").textContent = "아직 고르지 않은 문항이 " + miss.length + "개 있어요.";
         document.getElementById("c-" + miss[0].id).scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
-      go(STEP_OPEN);
+      go(STEP_OPEN());
     };
   }
 
   function renderOpen() {
-    var html = '<span class="section-tag">나에 대해 적기</span><p class="lead" style="margin-top:8px">짧게 적어도 괜찮아요. 상담 때 원장님이 참고해요.</p>';
-    D.openItems.forEach(function (it0) {
-      var it = gjOpenItem(it0, st.info.level);
+    var m = M();
+    var html = '<span class="section-tag">' + m.sec3 + '</span><p class="lead" style="margin-top:8px">짧게 적어도 괜찮아요. 상담 때 원장님이 참고해요.</p>';
+    m.open.forEach(function (it0) {
+      var it = m.openItem(it0);
       var v = st.open[it.id] || "";
       html += '<div class="field"><label for="o-' + it.id + '">' + esc(it.q) + (it.optional ? "" : '<span class="req">*</span>') + '</label>';
       if (it.type === "select") {
@@ -305,40 +391,49 @@ textarea { min-height: 96px; resize: vertical }
     });
     html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">검사 완료</button></div>';
     app.innerHTML = html;
-    function collect() { D.openItems.forEach(function (it) { st.open[it.id] = document.getElementById("o-" + it.id).value.trim(); }); save(); }
-    app.onchange = null; app.oninput = collect;
-    document.getElementById("prev").onclick = function () { collect(); go(STEP_STYLE); };
+    function collect() { m.open.forEach(function (it) { st.open[it.id] = document.getElementById("o-" + it.id).value.trim(); }); save(); }
+    app.oninput = collect;
+    document.getElementById("prev").onclick = function () { collect(); go(STEP_STYLE()); };
     document.getElementById("next").onclick = function () {
       collect();
-      var miss = D.openItems.filter(function (it) { return !it.optional && !st.open[it.id]; });
-      if (miss.length) { document.getElementById("err").textContent = "'" + gjOpenItem(miss[0], st.info.level).q + "'에 답해 주세요."; document.getElementById("o-" + miss[0].id).focus(); return; }
+      var miss = m.open.filter(function (it) { return !it.optional && !st.open[it.id]; });
+      if (miss.length) { document.getElementById("err").textContent = "'" + m.openItem(miss[0]).q + "'에 답해 주세요."; document.getElementById("o-" + miss[0].id).focus(); return; }
       submit();
     };
   }
 
   function payload() {
     var answers = { likert: st.likert, style: st.style, open: st.open };
-    var r = gjScore(answers);
-    return {
-      id: st.id, version: 1, submittedAt: new Date().toISOString(),
-      info: st.info, answers: answers,
-      summary: { overall: r.overall, type: r.type.name, weak: r.weak.map(function (f) { return f.name; }) }
-    };
+    var summary;
+    if (st.role === "parent") {
+      var pr = gjParentScore(answers);
+      summary = { overall: "", type: "학부모: " + pr.type.name, weak: pr.risks.map(function (f) { return f.name; }) };
+    } else {
+      var r = gjScore(answers);
+      summary = { overall: r.overall, type: r.type.name, weak: r.weak.map(function (f) { return f.name; }) };
+    }
+    return { id: st.id, version: 2, role: st.role, submittedAt: new Date().toISOString(), info: st.info, answers: answers, summary: summary };
   }
 
   function submit() {
     var btn = document.getElementById("next"), err = document.getElementById("err");
     var data = payload();
-    if (!C.API_URL) try { localStorage.setItem("gj-last-result", JSON.stringify(data)); } catch (e) {}
-    if (!C.API_URL) try { var h = JSON.parse(localStorage.getItem("gj-history")) || []; if (!h.some(function (x) { return x.id === data.id; })) h.push(data); localStorage.setItem("gj-history", JSON.stringify(h.slice(-10))); } catch (e) {}
-    if (!C.API_URL) { st.sent = true; st.preview = true; go(STEP_DONE); return; }
+    if (!C.API_URL) {
+      try { localStorage.setItem("gj-last-result", JSON.stringify(data)); } catch (e) {}
+      try { var h = JSON.parse(localStorage.getItem("gj-history")) || []; if (!h.some(function (x) { return x.id === data.id; })) h.push(data); localStorage.setItem("gj-history", JSON.stringify(h.slice(-10))); } catch (e) {}
+      st.sent = true; st.preview = true; go(STEP_DONE()); return;
+    }
     btn.disabled = true; btn.textContent = "보내는 중…"; err.textContent = "";
     fetch(C.API_URL, { method: "POST", body: JSON.stringify(data) })
       .then(function (res) { return res.json(); })
-      .then(function (j) { if (!j.ok) throw new Error(j.error || "저장 실패"); // 제출 성공: 공용 기기에 개인정보가 남지 않도록 이름만 남기고 지움
-        st = { step: STEP_DONE, sent: true, id: st.id, info: { name: st.info.name }, likert: {}, style: {}, open: {} };
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || "저장 실패");
+        // 제출 성공: 공용 기기에 개인정보가 남지 않도록 이름만 남기고 지움
+        var role = st.role, name = st.info.name;
+        st = fresh(); st.role = role; st.sent = true; st.info = { name: name }; st.step = STEP_DONE();
         try { localStorage.removeItem("gj-last-result"); } catch (e) {}
-        save(); render(); window.scrollTo(0, 0); })
+        save(); render(); window.scrollTo(0, 0);
+      })
       .catch(function () {
         btn.disabled = false; btn.textContent = "다시 보내기";
         err.textContent = "인터넷 연결 문제로 결과를 보내지 못했어요. 답은 그대로 저장되어 있으니 '다시 보내기'를 눌러 주세요.";
@@ -346,17 +441,17 @@ textarea { min-height: 96px; resize: vertical }
   }
 
   function renderDone() {
-    app.innerHTML = '<div class="done"><div class="mark" aria-hidden="true">✓</div><h1>수고했어요, ' + esc(st.info.name) + '!</h1>' +
-      '<p class="lead">검사 결과가 ' + esc(C.ACADEMY) + ' 원장님께 전달되었어요.<br>상담 때 결과지를 보며 자세히 이야기 나눠요.</p>' +
-      (st.preview ? '<div class="note"><b>미리보기 모드</b>예요. 앱스 스크립트 주소를 연결하기 전이라 결과는 이 기기에만 저장됐어요.<div class="nav"><a class="btn primary" style="text-align:center;text-decoration:none" href="report.html#local">방금 한 검사 결과지 보기</a></div><div class="nav"><button class="btn" id="again" style="flex:1">처음부터 다시 하기</button></div></div>' : '<div class="nav" style="margin-top:32px"><button class="btn" id="again" style="flex:1">다른 학생이 검사하기</button></div>') +
+    var parent = st.role === "parent";
+    app.innerHTML = '<div class="done"><div class="mark" aria-hidden="true">✓</div><h1>' + (parent ? "감사합니다!" : "수고했어요, " + esc(st.info.name) + "!") + '</h1>' +
+      '<p class="lead">' + (parent ? esc(st.info.name) + ' 학생 학부모님의 검사 결과가 ' + esc(C.ACADEMY) + ' 원장님께 전달되었어요.<br>상담 때 자녀의 결과와 함께 보며 이야기 나눠요.' : '검사 결과가 ' + esc(C.ACADEMY) + ' 원장님께 전달되었어요.<br>상담 때 결과지를 보며 자세히 이야기 나눠요.') + '</p>' +
+      (st.preview ? '<div class="note"><b>미리보기 모드</b>예요. 결과는 이 기기에만 저장됐어요.<div class="nav"><a class="btn primary" style="text-align:center;text-decoration:none" href="report.html#local">방금 한 검사 결과지 보기</a></div><div class="nav"><button class="btn" id="again" style="flex:1">처음 화면으로</button></div></div>'
+        : '<div class="nav" style="margin-top:32px"><button class="btn" id="again" style="flex:1">다음 사람이 검사하기</button></div>') +
       '</div>';
     var again = document.getElementById("again");
-    if (again) again.onclick = function () { try { localStorage.removeItem(KEY); } catch (e) {} st = { step: 0, id: newId(), info: {}, likert: {}, style: {}, open: {}, sent: false }; go(0); };
+    if (again) again.onclick = function () { try { localStorage.removeItem(KEY); } catch (e) {} st = fresh(); go(0); };
   }
 
-  var _go = go;
-  go = function (s) { if (s >= STEP_INFO && s < STEP_DONE) st.lastStep = s; _go(s); };
-  if (st.sent && st.step !== STEP_DONE) st.step = STEP_DONE;
+  if (st.sent && st.step !== STEP_DONE()) st.step = STEP_DONE();
   render();
 })();
 </script>
