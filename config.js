@@ -2,7 +2,13 @@
    ① API_URL: 앱스 스크립트 '웹 앱 URL'을 붙여 넣으세요. (비워 두면 미리보기 모드로 동작합니다)
    ② LOGO_URL: 금정수학 로고 이미지 파일 이름 (예: "logo.png"). 비우면 글자로 표시됩니다. */
 var GJ_CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbzS5JGjwsbjKrPPb0UbxHD6dM4twm06oxWgTDrl_m8SBwLoy2TGxALvNIS1PigKhysSjQ/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbwPbWR840OeSXDDayy4rLFQ_S5BHG7LSZWg06s5AQG8J4YUVyRdloy6HHiHMT4HmSRwfQ/exec",
+  // 배포를 여러 번 해서 주소가 여러 개일 때: 결과지 화면이 최신 코드가 도는 주소를 자동으로 골라요
+  API_URLS: [
+    "https://script.google.com/macros/s/AKfycbwPbWR840OeSXDDayy4rLFQ_S5BHG7LSZWg06s5AQG8J4YUVyRdloy6HHiHMT4HmSRwfQ/exec",
+    "https://script.google.com/macros/s/AKfycbz0CxC2fiNOnRVakJocxhOHYNPrT8kpudn8D1REaAmYOtUjotJn_NYUl2H45Onxv9k4Jg/exec",
+    "https://script.google.com/macros/s/AKfycbzS5JGjwsbjKrPPb0UbxHD6dM4twm06oxWgTDrl_m8SBwLoy2TGxALvNIS1PigKhysSjQ/exec"
+  ],
   ACADEMY: "금정수학",
   ACADEMY_EN: "GEUMJEONG MATH",
   LOGO_URL: "logo.png",

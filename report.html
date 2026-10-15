@@ -209,8 +209,8 @@ table.list tr.click:hover td { background: var(--soft) }
   <main id="app"></main>
 </div>
 
-<script src="config.js?v=202610160200"></script>
-<script src="questions.js?v=202610160200"></script>
+<script src="config.js?v=202610160236"></script>
+<script src="questions.js?v=202610160236"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -491,9 +491,30 @@ table.list tr.click:hover td { background: var(--soft) }
   }
 
   /* ── 원장님 로그인·목록 ── */
-  function api(params) {
+  /* 앱스 스크립트 주소가 여러 개(배포를 여러 번 한 경우)면 최신 코드가 도는 주소를 자동으로 골라 씀 */
+  var apiPick = null;
+  function call(url, params) {
     var q = Object.keys(params).map(function (k) { return k + "=" + encodeURIComponent(params[k]); }).join("&");
-    return fetch(C.API_URL + (C.API_URL.indexOf("?") < 0 ? "?" : "&") + q).then(function (r) { return r.json(); });
+    return fetch(url + (url.indexOf("?") < 0 ? "?" : "&") + q).then(function (r) { return r.json(); });
+  }
+  function api(params) {
+    var urls = (C.API_URLS && C.API_URLS.length) ? C.API_URLS : [C.API_URL];
+    if (apiPick || urls.length === 1) return call(apiPick || urls[0], params);
+    return Promise.all(urls.map(function (u) {
+      return call(u, { action: "list", key: params.key }).then(function (j) { return { u: u, j: j }; }, function () { return { u: u, j: null }; });
+    })).then(function (rs) {
+      var best = null, bestScore = -1;
+      rs.forEach(function (r) {
+        if (!r.j || !r.j.ok) return;
+        var items = r.j.items || [], sc = 0;
+        if (!items.length) sc = 1;
+        items.forEach(function (it) { if ("role" in it) sc += 100; if (it.role === "parent") sc += 10; if (it.paired) sc += 1; });
+        if (sc > bestScore) { bestScore = sc; best = r; }
+      });
+      if (!best) return rs[0].j || { ok: false, error: "unreachable" };
+      apiPick = best.u;
+      return params.action === "list" ? best.j : call(apiPick, params);
+    });
   }
   function login(msg) {
     bar.innerHTML = '<span class="title">' + esc(C.ACADEMY) + ' 결과지</span>';
