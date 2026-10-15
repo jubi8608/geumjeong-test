@@ -482,3 +482,74 @@ function gjPickPair(target, candidates) {
   }
   return list.sort(function (a, b) { return new Date(b.submittedAt) - new Date(a.submittedAt); })[0] || null;
 }
+
+/* ───────────────── 원장님 전용 상담 가이드 문구 (PDF에는 나오지 않음) ───────────────── */
+var GJ_GUIDE = {
+  ask: {
+    selfEff: "아이가 '난 안 돼', '못하겠어' 같은 말을 자주 하나요?",
+    intrinsic: "아이가 스스로 궁금해서 찾아보는 분야가 있나요?",
+    goal: "아이와 공부 목표나 꿈에 대해 이야기해 보신 적 있나요?",
+    focus: "집에서 공부할 때 한 번에 얼마나 앉아 있나요?",
+    plan: "숙제나 공부를 미루는 편인가요? 주로 언제 하나요?",
+    diligence: "숙제를 대충 하거나 빠뜨리는 일이 있나요?",
+    understand: "배운 내용을 물어보면 자기 말로 설명하나요, 외운 대로 말하나요?",
+    review: "시험 공부는 보통 언제부터 시작하나요?",
+    anxiety: "시험 전날이나 당일 아침에 아이 모습이 어떤가요?",
+    resilience: "시험을 못 봤을 때 아이 반응은 어떤가요?",
+    family: "집에서 공부 이야기를 꺼내면 분위기가 어떤가요?",
+    phone: "공부할 때 휴대폰은 어디에 두나요?",
+    mathConf: "아이가 수학을 언제부터 어려워했나요?",
+    mathCalm: "수학 문제를 풀다 막히면 아이가 어떻게 하나요?",
+    errorHandle: "틀린 문제를 다시 풀어 보는 편인가요?",
+    persist: "어려운 문제가 나오면 얼마나 붙잡고 있나요?"
+  },
+  plan: {
+    selfEff: "한 단계 쉬운 문제로 '해냈다'는 경험부터",
+    intrinsic: "원리 탐구 문제로 흥미 끌어올리기",
+    goal: "학기 목표와 주간 목표를 함께 세우기",
+    focus: "15~20분 단위 수업 리듬으로 집중 시간 늘리기",
+    plan: "주간 계획표 작성과 실천 확인",
+    diligence: "분량보다 완성도 중심 과제와 풀이 확인",
+    understand: "배운 개념을 직접 설명하는 시간",
+    review: "1일·1주·1달 누적 복습 테스트",
+    anxiety: "실전과 같은 형식의 테스트로 시험 적응",
+    resilience: "과정 칭찬과 시험 뒤 '다음엔 이렇게' 계획",
+    family: "정기 리포트로 가정과 진행 상황 공유",
+    phone: "수업 중 휴대폰 보관, 가정 약속 정하기",
+    mathConf: "현재 실력에 맞춘 개인 진도로 자신감 회복",
+    mathCalm: "틀려도 괜찮은 분위기와 단계별 문제 구성",
+    errorHandle: "원인을 나눠 쓰는 오답 노트와 재풀이",
+    persist: "힌트를 단계별로 주며 끝까지 풀어 보기"
+  },
+  /* 부모 신호를 부드럽게 꺼내는 말 */
+  soft: {
+    worry: "그만큼 아이를 아끼셔서 걱정도 크신 것 같아요. 그런데 아이는 그 걱정을 생각보다 크게 느끼고 있을 수 있어요.",
+    pressure: "정말 열심히 챙겨 주시는 게 느껴져요. 다만 아이가 공부를 '시켜서 하는 일'로 느끼기 시작하면 학년이 올라갈수록 힘들어져요.",
+    outcome: "점수가 중요한 건 당연해요. 다만 시험 뒤 첫마디가 점수면 아이는 다음 시험을 더 두려워하게 돼요.",
+    compare: "주변 이야기를 많이 들으시니 비교가 되실 수밖에 없죠. 아이에게는 '지난번의 나'와 비교하는 말이 훨씬 힘이 돼요.",
+    mathBurden: "수학은 저희가 맡을게요. 집에서는 '모르면 학원에서 물어보자' 한마디면 충분해요.",
+    autonomy: "지금은 하나하나 챙겨 주시는 게 필요한 시기일 수 있어요. 다만 조금씩 아이에게 맡기는 연습을 저희와 함께 해 보면 좋겠어요."
+  }
+};
+
+/* 결과로 상담 가이드 만들기 */
+function gjGuide(r, open, pr) {
+  var g = { opener: [], asks: [], soft: [], plan: [], cautions: [], quote: "" };
+  var cf = {}; r.factors.forEach(function (f) { cf[f.key] = f; });
+  var top = r.strengths[0], low = r.focus.length ? r.focus : r.weak;
+  g.opener.push("강점으로 시작: '" + top.name + "' " + top.score + "점. " + top.good);
+  if (low[0]) g.opener.push("핵심 과제 하나만 짚기: '" + low[0].name + "' " + low[0].score + "점.");
+  g.opener.push("학습 유형 '" + r.type.name + "': " + r.type.desc);
+  low.slice(0, 3).forEach(function (f) { g.asks.push(GJ_GUIDE.ask[f.key]); });
+  if (open && open.o5) g.quote = open.o5;
+  low.slice(0, 3).forEach(function (f) { g.plan.push(f.name + " → " + GJ_GUIDE.plan[f.key]); });
+  if (pr) {
+    pr.risks.slice(0, 2).forEach(function (f) { g.soft.push({ name: f.name, text: GJ_GUIDE.soft[f.key] }); });
+  }
+  if (cf.anxiety.score < 50 || cf.mathCalm.score < 50) g.cautions.push("시험·수학 긴장이 큰 아이예요. 아이 앞에서 점수·등수 이야기는 줄이고, 결과지는 학부모님과 먼저 보세요.");
+  if (cf.resilience.score < 50) g.cautions.push("실패 이야기에 쉽게 위축되는 아이예요. 약점보다 강점을 먼저, 많이 말해 주세요.");
+  if (cf.selfEff.score < 50 || cf.mathConf.score < 50) g.cautions.push("자신감이 낮은 상태예요. 상담 중 문제를 풀게 한다면 쉬운 것부터 시작하세요.");
+  if (pr && cf.intrinsic.score < 50 && pr.factors.filter(function (f) { return f.key === "pressure"; })[0].risk) g.cautions.push("공부 압박이 이미 큰 상태라 숙제 양을 늘리는 제안은 피하는 게 좋아요.");
+  if (!g.cautions.length) g.cautions.push("전반적으로 안정적인 아이예요. 강점을 먼저 짚고, 목표를 함께 세우는 이야기로 이어 가세요.");
+  return g;
+}

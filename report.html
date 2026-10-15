@@ -111,6 +111,21 @@ table.list tr.click:hover td { background: var(--soft) }
 .chip.pair { background: var(--accent-soft); color: var(--ink) }
 .pvoice { grid-template-columns: 1fr 1fr 1fr }
 @media (max-width: 720px) { .lk-bars { grid-template-columns: 44px 1fr 30px 64px } .pvoice { grid-template-columns: 1fr } }
+.guide { background: var(--paper); border: 2px solid var(--accent); border-radius: 12px; padding: 22px 22px 24px; margin-bottom: 20px }
+.guide-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px }
+.guide-h h2 { font-family: var(--display); font-size: 22px; margin: 4px 0 0 }
+.guide-tag { display: inline-block; background: var(--ink); color: var(--paper); font-size: 12px; font-weight: 700; border-radius: 4px; padding: 2px 8px }
+.guide-note { color: var(--muted); font-size: 13px; margin: 6px 0 16px }
+.guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.gbox { background: var(--soft); border-radius: 10px; padding: 14px 16px; min-width: 0 }
+.gbox.wide { grid-column: 1 / -1 }
+.gbox h3 { font-size: 15px; margin: 0 0 6px }
+.gbox h3 small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 6px }
+.gbox ul { margin: 0; padding-left: 1.2em } .gbox li { margin: 4px 0 }
+.gbox p { margin: 4px 0 }
+.gq { background: var(--accent-soft); border-radius: 6px; padding: 8px 10px; margin-top: 8px !important; font-size: 13.5px }
+.gsub { font-weight: 700; margin-top: 10px !important }
+@media (max-width: 720px) { .guide-grid { grid-template-columns: 1fr } }
 .chip { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 7px; text-align: center; white-space: nowrap }
 .chip.high { background: var(--good-soft); color: var(--good) }
 .chip.mid { background: var(--mid-soft); color: var(--mid) }
@@ -201,6 +216,16 @@ table.list tr.click:hover td { background: var(--soft) }
   .tips { padding: 10px 14px; margin-bottom: 14px }
   .memo .ln { height: 26px }
   .foot { position: absolute; left: 4mm; right: 4mm; bottom: 7mm; margin: 0 }
+  .fits { gap: 6px; margin-bottom: 12px }
+  .fit .line { margin: 9px 0 11px }
+  .fit p { font-size: 11.5px }
+  .pvoice { grid-template-columns: 1fr 1fr 1fr }
+  .two .type-box { padding: 12px 16px }
+  .two .type-box .name { font-size: 22px }
+  /* 상담 가이드만 따로 인쇄 */
+  body.print-guide .sheet { display: none !important }
+  body.print-guide #guide { display: block !important; border: none; padding: 0 }
+  body.print-guide #guide .btn, body.print-guide .guide-note { display: none !important }
   .pgno { bottom: 2mm }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
@@ -211,8 +236,8 @@ table.list tr.click:hover td { background: var(--soft) }
   <main id="app"></main>
 </div>
 
-<script src="config.js?v=202610160240"></script>
-<script src="questions.js?v=202610160240"></script>
+<script src="config.js?v=202610160245"></script>
+<script src="questions.js?v=202610160245"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -389,6 +414,29 @@ table.list tr.click:hover td { background: var(--soft) }
     window.scrollTo(0, 0);
   }
 
+  function guideHtml(r, info, open, parentRec) {
+    var pr = parentRec ? gjParentScore(parentRec.answers) : null, g = gjGuide(r, open, pr);
+    var li = function (arr) { return '<ul>' + arr.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul>'; };
+    var fitsGap = [];
+    if (pr) P.fits.forEach(function (ft) {
+      var cs = side(r.axes[ft.c]), ps = side(pr.axes[ft.p]);
+      if (cs !== ps) fitsGap.push(ft.title + ": " + (cs === "a" ? ft.ca : ft.cb));
+    });
+    return '<section class="guide noprint" id="guide" hidden>' +
+      '<div class="guide-h"><div><span class="guide-tag">원장님만 보는 화면</span><h2>' + esc(info.name) + ' 상담 가이드</h2></div><span class="row">' + (inFrame ? '' : '<button class="btn primary" id="guidePdf">가이드 PDF 저장</button>') + '<button class="btn" id="guideClose">닫기</button></span></div>' +
+      '<p class="guide-note">학부모님께 드리는 결과지 PDF에는 나오지 않아요. 원장님용으로는 \'가이드 PDF 저장\'으로 따로 저장할 수 있어요.</p>' +
+      '<div class="guide-grid">' +
+        '<div class="gbox"><h3>1. 이렇게 시작하세요</h3>' + li(g.opener) + '</div>' +
+        '<div class="gbox"><h3>2. 학부모님께 물어볼 질문</h3>' + li(g.asks) + (g.quote ? '<p class="gq">학생이 직접 쓴 고민: “' + esc(g.quote) + '”<br>이 내용을 알고 계셨는지 여쭤보세요.</p>' : '') + '</div>' +
+        (pr ? '<div class="gbox wide"><h3>3. 부모님 이야기는 이렇게 꺼내세요 <small>양육 스타일: ' + esc(pr.type.name) + '</small></h3>' +
+          (g.soft.length ? '<ul>' + g.soft.map(function (x) { return '<li><b>' + esc(x.name) + '</b> “' + esc(x.text) + '”</li>'; }).join("") + '</ul>' : '<p>부모님 쪽 부담 신호가 크지 않아요. 지금의 지원을 인정해 드리며 시작하세요.</p>') +
+          (fitsGap.length ? '<p class="gsub">아이와 성향 차이</p>' + li(fitsGap) : '') + '</div>'
+          : '<div class="gbox wide"><h3>3. 부모님 이야기</h3><p>학부모 검사 결과가 아직 없어요. 상담 중 학부모님께 <b>#parent</b> 링크로 5분 검사를 권해 보세요. 결과가 오면 이 칸이 채워져요.</p></div>') +
+        '<div class="gbox"><h3>4. 금정수학 수업으로 연결하기</h3><p>“그래서 첫 달에는 이것부터 잡겠습니다.”</p>' + li(g.plan) + '</div>' +
+        '<div class="gbox"><h3>5. 조심할 점</h3>' + li(g.cautions) + '</div>' +
+      '</div></section>';
+  }
+
   function delta(v) { return v > 0 ? '<span class="delta up">▲' + v + '</span>' : v < 0 ? '<span class="delta down">▼' + (-v) + '</span>' : '<span class="delta same">-</span>'; }
 
   function renderReport(rec, opts) {
@@ -472,11 +520,23 @@ table.list tr.click:hover td { background: var(--soft) }
     }
     var pp = parent ? pairPage(r, info, parent, head, foot) : "";
     var html = [p1, p2, p3, pp, p4].join(""), total = (html.match(/%PG%/g) || []).length, k = 0;
-    app.innerHTML = html.replace(/%PG%/g, function () { k++; return k + " / " + total; });
+    app.innerHTML = guideHtml(r, info, open, parent) + html.replace(/%PG%/g, function () { k++; return k + " / " + total; });
     document.title = (info.name || "학생") + " 학습심리 진단 결과 - " + C.ACADEMY;
 
     bar.innerHTML = '<span class="row">' + (opts.back ? '<button class="btn" id="back">← 목록</button>' : '') + '<span class="title">' + esc(info.name) + ' 결과지</span></span>' +
-      (inFrame ? '<span class="muted" style="font-size:13px">PDF 저장은 홈페이지에 올린 주소에서 작동해요</span>' : '<button class="btn primary" id="pdf">PDF로 저장 · 인쇄</button>');
+      '<span class="row"><button class="btn" id="guideBtn">상담 가이드</button>' +
+      (inFrame ? '<span class="muted" style="font-size:13px;align-self:center">PDF 저장은 홈페이지 주소에서 작동해요</span>' : '<button class="btn primary" id="pdf">PDF로 저장 · 인쇄</button>') + '</span>';
+    var gd = document.getElementById("guide");
+    document.getElementById("guideBtn").onclick = function () { gd.hidden = !gd.hidden; if (!gd.hidden) gd.scrollIntoView({ behavior: "smooth", block: "start" }); };
+    document.getElementById("guideClose").onclick = function () { gd.hidden = true; window.scrollTo(0, 0); };
+    var gp = document.getElementById("guidePdf");
+    if (gp) gp.onclick = function () {
+      var t = document.title; document.title = (info.name || "학생") + " 상담 가이드 - " + C.ACADEMY;
+      document.body.classList.add("print-guide");
+      var done = function () { document.body.classList.remove("print-guide"); document.title = t; window.removeEventListener("afterprint", done); };
+      window.addEventListener("afterprint", done);
+      window.print(); setTimeout(done, 1500);
+    };
     var b = document.getElementById("back"); if (b) b.onclick = opts.back;
     var p = document.getElementById("pdf"); if (p) p.onclick = function () { window.print(); };
     window.scrollTo(0, 0);
