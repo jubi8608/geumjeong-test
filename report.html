@@ -209,8 +209,8 @@ table.list tr.click:hover td { background: var(--soft) }
   <main id="app"></main>
 </div>
 
-<script src="config.js?v=202610160152"></script>
-<script src="questions.js?v=202610160152"></script>
+<script src="config.js?v=202610160200"></script>
+<script src="questions.js?v=202610160200"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -269,8 +269,7 @@ table.list tr.click:hover td { background: var(--soft) }
 
   function localPair(rec) {
     var want = rec.role === "parent" ? "student" : "parent";
-    return localHistory().filter(function (h) { return (h.role || "student") === want && gjSameChild(h.info, rec.info); })
-      .sort(function (a, b) { return new Date(b.submittedAt) - new Date(a.submittedAt); })[0] || null;
+    return gjPickPair(rec.info, localHistory().filter(function (h) { return (h.role || "student") === want; }));
   }
   /* 학생/학부모 결과를 받아 알맞은 결과지로 보여 주기 */
   function show(item, o) {
@@ -378,7 +377,7 @@ table.list tr.click:hover td { background: var(--soft) }
       '<h3 class="sec" style="margin-top:18px">양육 성향</h3><div class="axes">' + axes + '</div>' +
       '<div class="tips"><b>아이를 위해 이렇게 해 보세요</b><ul>' + tips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></div>' +
       (voice ? '<h3 class="sec">학부모님이 적은 이야기</h3><div class="voice">' + voice + '</div>' : '') +
-      '<p class="note noprint">자녀가 같은 이름·학교·학년(그리고 같은 보호자 연락처)으로 검사하면, 자녀 결과지에 \'부모 마음 × 아이 마음\' 쪽이 자동으로 붙어요.</p>' +
+      '<p class="note noprint">자녀가 같은 이름·학교·학년으로 검사하면, 자녀 결과지에 \'부모 마음 × 아이 마음\' 쪽이 자동으로 붙어요.</p>' +
       foot + '<span class="pgno">1 / 1</span></section>';
     document.title = (info.name || "학생") + " 학부모 양육 스타일 - " + C.ACADEMY;
     bar.innerHTML = '<span class="row">' + (o.back ? '<button class="btn" id="back">← 목록</button>' : '') + '<span class="title">' + esc(info.name) + ' 학부모 결과지</span></span>' +

@@ -462,11 +462,23 @@ function gjParentScore(answers) {
     risks: factors.filter(function (f) { return f.risk; }).sort(function (a, b) { return (b.burden ? b.score : 100 - b.score) - (a.burden ? a.score : 100 - a.score); }) };
 }
 
-/* 학생·학부모 짝짓기: 이름+학교+학년이 같고, 둘 다 보호자 연락처가 있으면 연락처도 같아야 함 (동명이인 방지) */
+/* 학생·학부모 짝짓기
+   1) 자녀 이름 + 학교 구분 + 학교 + 학년이 모두 같으면 같은 아이 후보
+   2) 후보가 여러 명(동명이인)이면 보호자 연락처가 같은 쪽을 고름
+   → 어머니 번호로 아이가 검사하고 아버지가 다른 번호로 검사해도 연결됩니다. */
 function gjNorm(s) { return String(s || "").replace(/\s+/g, "").replace(/^'/, ""); }
+function gjDigits(s) { return String(s || "").replace(/\D/g, ""); }
 function gjSameChild(a, b) {
   if (!a || !b) return false;
-  if (gjNorm(a.name) !== gjNorm(b.name) || gjNorm(a.school) !== gjNorm(b.school) || gjNorm(a.grade) !== gjNorm(b.grade) || gjNorm(a.level) !== gjNorm(b.level)) return false;
-  var pa = String(a.parentPhone || "").replace(/\D/g, ""), pb = String(b.parentPhone || "").replace(/\D/g, "");
-  return !(pa && pb && pa !== pb);
+  return gjNorm(a.name) === gjNorm(b.name) && gjNorm(a.school) === gjNorm(b.school) && gjNorm(a.grade) === gjNorm(b.grade) && gjNorm(a.level) === gjNorm(b.level);
+}
+/* 후보 기록들(rec.info 포함) 중 가장 알맞은 하나: 연락처 일치 우선, 그다음 최신 */
+function gjPickPair(target, candidates) {
+  var list = candidates.filter(function (c) { return gjSameChild(c.info, target); });
+  if (list.length > 1) {
+    var ph = gjDigits(target.parentPhone);
+    var byPhone = list.filter(function (c) { return ph && gjDigits(c.info.parentPhone) === ph; });
+    if (byPhone.length) list = byPhone;
+  }
+  return list.sort(function (a, b) { return new Date(b.submittedAt) - new Date(a.submittedAt); })[0] || null;
 }

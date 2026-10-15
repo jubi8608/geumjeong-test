@@ -122,8 +122,8 @@ textarea { min-height: 96px; resize: vertical }
   <main id="app" aria-live="polite"></main>
 </div>
 
-<script src="config.js?v=202610160159"></script>
-<script src="questions.js?v=202610160159"></script>
+<script src="config.js?v=202610160200"></script>
+<script src="questions.js?v=202610160200"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -285,7 +285,7 @@ textarea { min-height: 96px; resize: vertical }
       '<div class="field" style="margin-top:12px"><label for="f-pname">보호자 성함 <small>(학부모님 이름)</small><span class="req">*</span></label><input type="text" id="f-pname" autocomplete="name" placeholder="예: 김영희" value="' + esc(i.parentName) + '"></div>' +
       '<div class="field"><span class="lbl">자녀와의 관계<span class="req">*</span></span><div class="seg" role="radiogroup">' +
         ["어머니", "아버지", "기타 보호자"].map(function (r, k) { return '<input type="radio" name="rel" id="rel' + k + '" value="' + r + '"' + (r === rel ? " checked" : "") + '><label for="rel' + k + '">' + r + '</label>'; }).join("") + '</div></div>' +
-      '<div class="field"><label for="f-pphone">보호자 연락처<span class="req">*</span></label><input type="tel" id="f-pphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.parentPhone) + '"><small>자녀가 검사할 때 적은 보호자 연락처와 같은 번호를 적어 주세요.</small></div>' +
+      '<div class="field"><label for="f-pphone">보호자 연락처<span class="req">*</span></label><input type="tel" id="f-pphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.parentPhone) + '"><small>결과 안내를 받으실 번호를 적어 주세요.</small></div>' +
       consentBox(i.consent, "자녀 이름·학교·학년, 보호자 성함·연락처, 검사 응답") +
       '<p class="err" id="err"></p>' +
       '<div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음</button></div>';
