@@ -14,6 +14,7 @@
 /* 레이아웃: 한 줄 640px 카드형 진행 화면. 위에 진행 막대, 아래에 이전/다음 */
 :root {
   --plate: #ffffff;
+  --sel-b: #3b4a7a; --sel-b-ink: #ffffff; --soft-b: #e6e9f3;
   --bg: #f4f5f9; --card: #ffffff; --ink: #1c2340; --muted: #5d6585; --line: #dfe2ec;
   --accent: #f2b705; --accent-ink: #1c2340; --accent-soft: #fdf3cf; --sel: #1c2340; --sel-ink: #ffffff;
   --err: #c43d32;
@@ -22,10 +23,10 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #121527; --card: #1b1f37; --ink: #e8eaf4; --muted: #a3a9c4; --line: #2c3152;
-  --accent: #f5c42f; --accent-ink: #1c2340; --accent-soft: #3a3418; --sel: #f5c42f; --sel-ink: #1c2340; --err: #ff8a7d; color-scheme: dark } }
+  --accent: #f5c42f; --accent-ink: #1c2340; --accent-soft: #3a3418; --sel: #f5c42f; --sel-ink: #1c2340; --err: #ff8a7d; --sel-b: #8fa3e0; --sel-b-ink: #121527; --soft-b: #252b4a; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #121527; --card: #1b1f37; --ink: #e8eaf4; --muted: #a3a9c4; --line: #2c3152;
-  --accent: #f5c42f; --accent-ink: #1c2340; --accent-soft: #3a3418; --sel: #f5c42f; --sel-ink: #1c2340; --err: #ff8a7d; color-scheme: dark }
+  --accent: #f5c42f; --accent-ink: #1c2340; --accent-soft: #3a3418; --sel: #f5c42f; --sel-ink: #1c2340; --err: #ff8a7d; --sel-b: #8fa3e0; --sel-b-ink: #121527; --soft-b: #252b4a; color-scheme: dark }
 * { box-sizing: border-box }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-text-size-adjust: 100% }
 .wrap { max-width: 640px; margin: 0 auto; padding-block: 0 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
@@ -61,19 +62,21 @@ fieldset { min-width: 0 }
 .likert input:focus-visible + label, .style4 input:focus-visible + label, .seg input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px }
 .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px }
 .style-q { font-size: 14px; color: var(--muted); margin-bottom: 10px }
-.style-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center }
-.style-row .opt { font-weight: 600; font-size: 15px; line-height: 1.45 }
-.style-row .opt.b { text-align: right }
-.style4 { display: flex; gap: 8px }
-.style4 label { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); display: block; cursor: pointer }
-.style4 label.s2 { width: 40px; height: 40px }
-.style4 input:checked + label { background: var(--sel); border-color: var(--sel) }
-@media (max-width: 520px) {
-  .style-row { grid-template-columns: 1fr; gap: 8px }
-  .style-row .opt.b { text-align: left }
-  .style-row .opt::before { content: attr(data-side); display: inline-block; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-right: 6px; vertical-align: 2px }
-  .style4 { justify-content: space-between; padding: 0 6px }
-}
+.style-row { display: grid; grid-template-columns: 1fr; grid-template-areas: "a" "b" "s"; gap: 10px }
+.style-row .opt { font-weight: 600; font-size: 15px; line-height: 1.45; display: flex; gap: 8px; align-items: flex-start }
+.style-row .opt.a { grid-area: a }
+.style-row .opt.b { grid-area: b }
+.style-row .tag { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; font-size: 13px; font-weight: 700; margin-top: 1px }
+.tag.ta { background: var(--accent); color: var(--accent-ink) }
+.tag.tb { background: var(--sel-b); color: var(--sel-b-ink) }
+.style4 { grid-area: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 4px }
+.style4 label { display: grid; place-items: center; min-width: 58px; height: 42px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap }
+.style4 label.la { background: var(--accent-soft) }
+.style4 label.lb { background: var(--soft-b) }
+.style4 label.s2 { font-size: 14px }
+.style4 input:checked + label.la { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.style4 input:checked + label.lb { background: var(--sel-b); border-color: var(--sel-b); color: var(--sel-b-ink) }
+@media (max-width: 560px) { .style4 label { min-width: 0; padding: 0 4px } }
 .field { display: grid; gap: 6px; margin-bottom: 16px }
 .field > label, .field > .lbl { font-weight: 600; font-size: 15px }
 .field small { color: var(--muted) }
@@ -119,8 +122,8 @@ textarea { min-height: 96px; resize: vertical }
   <main id="app" aria-live="polite"></main>
 </div>
 
-<script src="config.js?v=202610160152"></script>
-<script src="questions.js?v=202610160152"></script>
+<script src="config.js?v=202610160159"></script>
+<script src="questions.js?v=202610160159"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -347,16 +350,17 @@ textarea { min-height: 96px; resize: vertical }
 
   function renderStyle() {
     var m = M();
-    var html = '<span class="section-tag">' + m.sec2 + '</span><p class="lead" style="margin-top:8px">좋고 나쁜 답은 없어요. 두 문장 중 나와 더 가까운 쪽의 동그라미를 골라 주세요. 가까울수록 큰 동그라미예요.</p>';
+    var html = '<span class="section-tag">' + m.sec2 + '</span><p class="lead" style="margin-top:8px">좋고 나쁜 답은 없어요. A와 B 중 나와 더 가까운 쪽을 고르고, 얼마나 가까운지(아주·조금) 눌러 주세요.</p>';
     m.style.forEach(function (it0, k) {
       var it = m.styleItem(it0);
       html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + (k + 1) + ' / ' + m.style.length + '</legend><div class="style-q">' + esc(it.q) + '</div><div class="style-row">' +
-        '<div class="opt a" data-side="왼쪽">' + esc(it.a) + '</div><div class="style4">';
+        '<div class="opt a"><span class="tag ta">A</span><span>' + esc(it.a) + '</span></div><div class="opt b"><span class="tag tb">B</span><span>' + esc(it.b) + '</span></div><div class="style4">';
       D.styleScale.forEach(function (o) {
         var idv = it.id + "_" + (o.v + 2);
-        html += '<input type="radio" name="' + it.id + '" id="' + idv + '" value="' + o.v + '"' + (st.style[it.id] === o.v ? " checked" : "") + '><label for="' + idv + '" class="' + (Math.abs(o.v) === 2 ? "s2" : "s1") + '" title="' + o.label + '" aria-label="' + o.label + '"></label>';
+        var lab = (o.v < 0 ? "A " : "B ") + (Math.abs(o.v) === 2 ? "아주" : "조금");
+        html += '<input type="radio" name="' + it.id + '" id="' + idv + '" value="' + o.v + '"' + (st.style[it.id] === o.v ? " checked" : "") + '><label for="' + idv + '" class="' + (o.v < 0 ? "la " : "lb ") + (Math.abs(o.v) === 2 ? "s2" : "s1") + '" title="' + o.label + '">' + lab + '</label>';
       });
-      html += '</div><div class="opt b" data-side="오른쪽">' + esc(it.b) + '</div></div></fieldset>';
+      html += '</div></div></fieldset>';
     });
     html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음 단계로</button></div>';
     app.innerHTML = html;
