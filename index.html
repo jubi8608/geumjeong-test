@@ -462,6 +462,8 @@ textarea { min-height: 96px; resize: vertical }
   if ((want === "parent" || want === "student") && (st.sent || (st.step === 0 && !Object.keys(st.likert).length) || st.role !== want && !Object.keys(st.likert).length)) {
     st = fresh(); st.role = want; st.step = STEP_INFO; save();
   }
+  /* 이미 열린 화면에서 주소 끝(#parent 등)만 바꿔도 바로 반영 */
+  window.addEventListener("hashchange", function () { location.reload(); });
   render();
 })();
 </script>
