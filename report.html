@@ -345,7 +345,7 @@ table.list tr.click:hover td { background: var(--soft) }
     if (pf.compare.risk) homeTips.push(pf.compare.tip);
     pr.type.tips.forEach(function (t) { if (homeTips.length < 3) homeTips.push(t); });
     var pvoice = P.openItems.map(function (it) { var a = popen[it.id]; return a ? '<div><div class="q">' + esc(it.q) + '</div><div class="a">' + esc(a) + '</div></div>' : ""; }).join("");
-    var whoLine = '<div class="who"><div><b>' + esc(info.name) + '</b></div><span>학부모<em>' + esc(pinfo.relation || "보호자") + '</em></span><span>학부모 검사일<em>' + fmtDate(parentRec.submittedAt) + '</em></span></div>';
+    var whoLine = '<div class="who"><div><b>' + esc(info.name) + '</b></div><span>학부모<em>' + esc((pinfo.parentName ? pinfo.parentName + " " : "") + (pinfo.relation || "보호자")) + '</em></span><span>학부모 검사일<em>' + fmtDate(parentRec.submittedAt) + '</em></span></div>';
     var tipsBox = '<div class="tips"><b>가정에서 이렇게 도와주세요</b><ul>' + homeTips.slice(0, 3).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></div>';
     return '<section class="sheet">' + head("부모 마음 × 아이 마음 ①") + whoLine +
       '<div class="two"><div class="type-box"><span class="lab">아이 학습 유형</span><div class="name">' + esc(r.type.name) + '</div><p>' + esc(r.type.desc) + '</p></div>' +
@@ -372,7 +372,7 @@ table.list tr.click:hover td { background: var(--soft) }
     var tips = pr.risks.map(function (f) { return f.tip; }).concat(pr.type.tips).slice(0, 4);
     var voice = P.openItems.map(function (it) { var a = open[it.id]; return a ? '<div class="wide"><div class="q">' + esc(it.q) + '</div><div class="a">' + esc(a) + '</div></div>' : ""; }).join("");
     app.innerHTML = '<section class="sheet">' + head +
-      '<div class="who"><div><b>' + esc(info.name) + '</b> <span style="font-size:15px">학생 ' + esc(info.relation || "보호자") + '</span></div><span>학교<em>' + esc(info.school) + '</em></span><span>학년<em>' + esc((info.level === "초등학교" ? "초" : "중") + " " + (info.grade || "")) + '</em></span><span>검사일<em>' + fmtDate(rec.submittedAt) + '</em></span></div>' +
+      '<div class="who"><div><b>' + esc(info.parentName || (info.name + " 학생 학부모")) + '</b> <span style="font-size:15px">' + esc(info.parentName ? info.name + " 학생 " + (info.relation || "보호자") : (info.relation || "")) + '</span></div><span>학교<em>' + esc(info.school) + '</em></span><span>학년<em>' + esc((info.level === "초등학교" ? "초" : "중") + " " + (info.grade || "")) + '</em></span><span>검사일<em>' + fmtDate(rec.submittedAt) + '</em></span></div>' +
       '<div class="type-box ptype" style="margin-bottom:20px"><span class="lab">양육 스타일</span><div class="name">' + esc(pr.type.name) + '</div><p>' + esc(pr.type.desc) + '</p></div>' +
       '<h3 class="sec">자녀 공부를 대하는 모습 <small>자녀 학업 걱정~수학 부담: 높을수록 아이에게 부담 신호 · 자율 지지: 높을수록 도움</small></h3>' + rows +
       '<h3 class="sec" style="margin-top:18px">양육 성향</h3><div class="axes">' + axes + '</div>' +
