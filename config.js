@@ -6,7 +6,7 @@ var GJ_CONFIG = {
   ACADEMY: "금정수학",
   ACADEMY_EN: "GEUMJEONG MATH",
   LOGO_URL: "logo.png",
-  CONTACT: "",          // 결과지 하단에 넣을 연락처 (예: "031-000-0000")
+  CONTACT: "010-3873-8608",          // 결과지 하단에 넣을 연락처 (예: "031-000-0000")
   TEST_NAME: "학습심리 진단검사",
   PRIVACY_KEEP: "상담 종료 후 1년"   // 개인정보 보유 기간
 };
