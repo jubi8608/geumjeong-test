@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>금정수학 학습심리검사</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 레이아웃: 한 줄 640px 카드형 진행 화면. 위에 진행 막대, 아래에 이전/다음 */
+:root {
+  --plate: #ffffff;
+  --bg: #f4f5f9; --card: #ffffff; --ink: #1c2340; --muted: #5d6585; --line: #dfe2ec;
+  --accent: #f2b705; --accent-ink: #1c2340; --accent-soft: #fdf3cf; --sel: #1c2340; --sel-ink: #ffffff;
+  --err: #c43d32;
+  --display: "Hahmlet", "Nanum Myeongjo", serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121527; --card: #1b1f37; --ink: #e8eaf4; --muted: #a3a9c4; --line: #2c3152;
+  --accent: #f5c42f; --accent-ink: #1c2340; --accent-soft: #3a3418; --sel: #f5c42f; --sel-ink: #1c2340; --err: #ff8a7d; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121527; --card: #1b1f37; --ink: #e8eaf4; --muted: #a3a9c4; --line: #2c3152;
+  --accent: #f5c42f; --accent-ink: #1c2340; --accent-soft: #3a3418; --sel: #f5c42f; --sel-ink: #1c2340; --err: #ff8a7d; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-text-size-adjust: 100% }
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 0 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px 10px }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700 }
+.brand img { height: 46px; width: auto; display: block; background: var(--plate); border-radius: 6px; padding: 3px 6px; box-sizing: content-box }
+.brand .ko { font-family: var(--display); font-size: 18px }
+.brand .en { font-size: 11px; letter-spacing: .14em; color: var(--muted) }
+.bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 10px; overflow: hidden }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s }
+.stepinfo { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums }
+h1 { font-family: var(--display); font-size: clamp(28px, 7vw, 38px); line-height: 1.25; margin: 28px 0 12px; text-wrap: balance }
+h2 { font-family: var(--display); font-size: 22px; margin: 20px 0 6px; text-wrap: balance }
+.lead { color: var(--muted); margin: 0 0 20px }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 24px 0 }
+.fact { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 12px }
+.fact b { display: block; font-family: var(--display); font-size: 24px; font-variant-numeric: tabular-nums }
+.fact span { font-size: 13px; color: var(--muted) }
+.parts { display: grid; gap: 8px; margin: 0 0 24px; padding: 0; list-style: none }
+.parts li { display: flex; gap: 12px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line) }
+.parts li b { min-width: 7.5em }
+.parts li span { color: var(--muted); font-size: 14px }
+fieldset { min-width: 0 }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 16px; margin-bottom: 12px }
+.card.missing { border-color: var(--err); box-shadow: 0 0 0 2px color-mix(in srgb, var(--err) 25%, transparent) }
+.qno { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .04em }
+.qtext { font-weight: 600; margin: 2px 0 14px; font-size: 17px }
+.likert { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px }
+.likert input, .style4 input, .seg input { position: absolute; opacity: 0; pointer-events: none }
+.likert label { display: flex; align-items: center; justify-content: center; height: 44px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; font-weight: 600; font-variant-numeric: tabular-nums; transition: background .15s }
+.likert label:hover { border-color: var(--muted) }
+.likert input:checked + label { background: var(--sel); color: var(--sel-ink); border-color: var(--sel) }
+.likert input:focus-visible + label, .style4 input:focus-visible + label, .seg input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px }
+.ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px }
+.style-q { font-size: 14px; color: var(--muted); margin-bottom: 10px }
+.style-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center }
+.style-row .opt { font-weight: 600; font-size: 15px; line-height: 1.45 }
+.style-row .opt.b { text-align: right }
+.style4 { display: flex; gap: 8px }
+.style4 label { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); display: block; cursor: pointer }
+.style4 label.s2 { width: 40px; height: 40px }
+.style4 input:checked + label { background: var(--sel); border-color: var(--sel) }
+@media (max-width: 520px) {
+  .style-row { grid-template-columns: 1fr; gap: 8px }
+  .style-row .opt.b { text-align: left }
+  .style-row .opt::before { content: attr(data-side); display: inline-block; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-right: 6px; vertical-align: 2px }
+  .style4 { justify-content: space-between; padding: 0 6px }
+}
+.field { display: grid; gap: 6px; margin-bottom: 16px }
+.field > label, .field > .lbl { font-weight: 600; font-size: 15px }
+.field small { color: var(--muted) }
+.req { color: var(--err); margin-left: 2px }
+input[type=text], input[type=tel], select, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent }
+textarea { min-height: 96px; resize: vertical }
+.seg { display: flex; gap: 8px; flex-wrap: wrap }
+.seg label { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; font-weight: 600 }
+.seg input:checked + label { background: var(--sel); color: var(--sel-ink); border-color: var(--sel) }
+.consent { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; font-size: 14px; color: var(--muted) }
+.consent dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0 0 10px }
+.consent dt { font-weight: 600; color: var(--ink) }
+.consent dd { margin: 0 }
+.check { display: flex; gap: 10px; align-items: flex-start; color: var(--ink); font-weight: 600; cursor: pointer }
+.check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--sel) }
+.err { color: var(--err); font-size: 14px; min-height: 1.4em; margin: 4px 0 0 }
+.nav { display: flex; gap: 10px; margin-top: 20px }
+.btn { font: inherit; font-weight: 700; border-radius: 10px; padding: 14px 20px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink) }
+.btn.primary { flex: 1; background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.btn:focus-visible { outline: 3px solid var(--sel); outline-offset: 2px }
+.btn[disabled] { opacity: .6; cursor: default }
+.section-tag { display: inline-block; background: var(--accent-soft); color: var(--ink); font-size: 13px; font-weight: 700; border-radius: 6px; padding: 3px 10px; margin-top: 20px }
+.done { text-align: center; padding-top: 40px }
+.done .mark { width: 72px; height: 72px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; margin: 0 auto; font-size: 36px; font-weight: 700 }
+.note { font-size: 13px; color: var(--muted); background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; margin-top: 16px; text-align: left }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand" id="brand"></div>
+    <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
+    <div class="stepinfo" id="stepinfo" hidden><span id="stepName"></span><span id="stepCount"></span></div>
+  </div>
+  <main id="app" aria-live="polite"></main>
+</div>
+
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function () {
+  var C = GJ_CONFIG, D = GJ_DATA;
+  var KEY = "gj-test-v1", PER_PAGE = 8;
+  var LPAGES = Math.ceil(D.likertOrder.length / PER_PAGE);
+  var STEP_INFO = 1, STEP_L0 = 2, STEP_STYLE = STEP_L0 + LPAGES, STEP_OPEN = STEP_STYLE + 1, STEP_DONE = STEP_OPEN + 1;
+  var TOTAL_Q = D.likertOrder.length + D.styleItems.length + D.openItems.length;
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function newId() { return "GJ" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(); }
+
+  var st = load() || { step: 0, id: newId(), info: {}, likert: {}, style: {}, open: {}, sent: false };
+  var app = document.getElementById("app");
+
+  document.getElementById("brand").innerHTML = C.LOGO_URL
+    ? '<img src="' + esc(C.LOGO_URL) + '" alt="' + esc(C.ACADEMY) + '">'
+    : '<span class="ko">' + esc(C.ACADEMY) + '</span><span class="en">' + esc(C.ACADEMY_EN) + '</span>';
+
+  function progress() {
+    var bw = document.getElementById("barWrap"), si = document.getElementById("stepinfo");
+    var on = st.step >= STEP_INFO && st.step < STEP_DONE;
+    bw.hidden = si.hidden = !on;
+    if (!on) return;
+    var answered = Object.keys(st.likert).length + Object.keys(st.style).length;
+    document.getElementById("bar").style.width = Math.round(answered / (D.likertOrder.length + D.styleItems.length) * 100) + "%";
+    var name = st.step === STEP_INFO ? "기본 정보" : st.step < STEP_STYLE ? "나의 공부 마음" : st.step === STEP_STYLE ? "나의 학습 성향" : "나에 대해 적기";
+    document.getElementById("stepName").textContent = name;
+    document.getElementById("stepCount").textContent = st.step >= STEP_L0 && st.step < STEP_STYLE ? (st.step - STEP_L0 + 1) + " / " + LPAGES + " 쪽" : "";
+  }
+
+  function go(step) { st.step = step; save(); render(); window.scrollTo(0, 0); }
+
+  function render() {
+    progress();
+    if (st.step === 0) return renderIntro();
+    if (st.step === STEP_INFO) return renderInfo();
+    if (st.step < STEP_STYLE) return renderLikert(st.step - STEP_L0);
+    if (st.step === STEP_STYLE) return renderStyle();
+    if (st.step === STEP_OPEN) return renderOpen();
+    return renderDone();
+  }
+
+  function renderIntro() {
+    var resume = Object.keys(st.likert).length > 0;
+    app.innerHTML =
+      '<h1>' + esc(C.ACADEMY) + ' ' + esc(C.TEST_NAME) + '</h1>' +
+      '<p class="lead">나는 어떤 마음으로, 어떤 방식으로 공부하고 있을까요? 정답이 없는 검사예요. 평소의 나를 떠올리며 솔직하게 답해 주세요. 솔직할수록 나에게 맞는 공부 방법이 정확하게 보여요.</p>' +
+      '<div class="facts"><div class="fact"><b>12분</b><span>예상 시간</span></div><div class="fact"><b>' + TOTAL_Q + '</b><span>문항</span></div><div class="fact"><b>자동</b><span>중간 저장</span></div></div>' +
+      '<ul class="parts">' +
+      '<li><b>나의 공부 마음</b><span>동기, 습관, 공부 방법, 마음, 환경, 수학에 대한 마음 (64문항)</span></li>' +
+      '<li><b>나의 학습 성향</b><span>둘 중 어느 쪽에 가까운지 고르기 (8문항)</span></li>' +
+      '<li><b>나에 대해 적기</b><span>자신 있는 단원, 고민 등 짧게 쓰기 (6문항)</span></li></ul>' +
+      '<p class="lead">결과는 상담 때 원장님이 직접 설명해 드려요.</p>' +
+      '<div class="nav"><button class="btn primary" id="start">' + (resume ? "이어서 하기" : "검사 시작하기") + '</button></div>';
+    document.getElementById("start").onclick = function () { go(resume ? Math.max(st.lastStep || STEP_INFO, STEP_INFO) : STEP_INFO); };
+  }
+
+  function renderInfo() {
+    var i = st.info;
+    var level = i.level || "중학교";
+    var grades = level === "초등학교" ? [4, 5, 6] : [1, 2, 3];
+    app.innerHTML =
+      '<h2>기본 정보</h2><p class="lead">결과지에 들어갈 정보예요.</p>' +
+      '<div class="field"><label for="f-name">이름<span class="req">*</span></label><input type="text" id="f-name" autocomplete="name" value="' + esc(i.name) + '"></div>' +
+      '<div class="field"><span class="lbl">학교 구분<span class="req">*</span></span><div class="seg" role="radiogroup">' +
+        ["초등학교", "중학교"].map(function (lv, k) { return '<input type="radio" name="level" id="lv' + k + '" value="' + lv + '"' + (lv === level ? " checked" : "") + '><label for="lv' + k + '">' + lv + '</label>'; }).join("") + '</div></div>' +
+      '<div class="field"><label for="f-grade">학년<span class="req">*</span></label><select id="f-grade">' +
+        grades.map(function (g) { return '<option value="' + g + '학년"' + (i.grade === g + "학년" ? " selected" : "") + '>' + g + '학년</option>'; }).join("") + '</select></div>' +
+      '<div class="field"><label for="f-school">학교 이름<span class="req">*</span></label><input type="text" id="f-school" placeholder="예: 금정중학교" value="' + esc(i.school) + '"></div>' +
+      '<div class="field"><label for="f-pphone">보호자 연락처<span class="req">*</span></label><input type="tel" id="f-pphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.parentPhone) + '"></div>' +
+      '<div class="field"><label for="f-sphone">학생 연락처 <small>(선택)</small></label><input type="tel" id="f-sphone" inputmode="numeric" placeholder="010-0000-0000" value="' + esc(i.studentPhone) + '"></div>' +
+      '<div class="consent"><dl>' +
+        '<dt>수집 항목</dt><dd>이름, 학교, 학년, 연락처, 검사 응답</dd>' +
+        '<dt>이용 목적</dt><dd>학습 상담과 학습 지도</dd>' +
+        '<dt>보유 기간</dt><dd>' + esc(C.PRIVACY_KEEP) + ' (요청하면 바로 삭제)</dd></dl>' +
+        '<label class="check"><input type="checkbox" id="f-consent"' + (i.consent ? " checked" : "") + '><span>위 내용을 확인했고, 개인정보 수집·이용에 동의합니다. 만 14세 미만 학생은 보호자가 함께 확인하고 동의해 주세요.</span></label></div>' +
+      '<p class="err" id="err"></p>' +
+      '<div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음</button></div>';
+    Array.prototype.forEach.call(document.querySelectorAll('input[name=level]'), function (r) {
+      r.onchange = function () { collect(); st.info.level = r.value; st.info.grade = ""; save(); renderInfo(); };
+    });
+    function collect() {
+      st.info = {
+        name: document.getElementById("f-name").value.trim(),
+        level: (document.querySelector('input[name=level]:checked') || {}).value || "중학교",
+        grade: document.getElementById("f-grade").value,
+        school: document.getElementById("f-school").value.trim(),
+        parentPhone: document.getElementById("f-pphone").value.trim(),
+        studentPhone: document.getElementById("f-sphone").value.trim(),
+        consent: document.getElementById("f-consent").checked
+      };
+      save();
+    }
+    app.oninput = collect;
+    document.getElementById("prev").onclick = function () { collect(); go(0); };
+    document.getElementById("next").onclick = function () {
+      collect();
+      var e = "", s = st.info, digits = s.parentPhone.replace(/\D/g, "");
+      if (!s.name) e = "이름을 적어 주세요.";
+      else if (!s.school) e = "학교 이름을 적어 주세요.";
+      else if (digits.length < 9 || digits.length > 11) e = "보호자 연락처를 숫자로 정확히 적어 주세요.";
+      else if (!s.consent) e = "개인정보 수집·이용에 동의해야 검사를 시작할 수 있어요.";
+      document.getElementById("err").textContent = e;
+      if (!e) { st.info.consentAt = new Date().toISOString(); go(STEP_L0); }
+    };
+  }
+
+  function renderLikert(p) {
+    var items = D.likertOrder.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
+    var html = (p === 0 ? '<span class="section-tag">나의 공부 마음</span><p class="lead" style="margin-top:8px">각 문장이 평소의 나와 얼마나 비슷한지 골라 주세요.</p>' : '');
+    items.forEach(function (it, k) {
+      var n = p * PER_PAGE + k + 1;
+      html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + n + ' / ' + D.likertOrder.length + '</legend><div class="qtext">' + esc(gjItemText(it, st.info.level)) + '</div><div class="likert">';
+      for (var v = 1; v <= 6; v++) {
+        var idv = it.id + "_" + v;
+        html += '<input type="radio" name="' + it.id + '" id="' + idv + '" value="' + v + '"' + (st.likert[it.id] == v ? " checked" : "") + '><label for="' + idv + '" title="' + D.scale[v - 1] + '">' + v + '</label>';
+      }
+      html += '</div><div class="ends"><span>전혀 아니다</span><span>매우 그렇다</span></div></fieldset>';
+    });
+    html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">' + (p === LPAGES - 1 ? "다음 단계로" : "다음") + '</button></div>';
+    app.innerHTML = html;
+    app.oninput = null;
+    app.onchange = function (e) {
+      var t = e.target; if (t.type !== "radio") return;
+      st.likert[t.name] = Number(t.value); save(); progress();
+      var c = document.getElementById("c-" + t.name); if (c) c.classList.remove("missing");
+    };
+    document.getElementById("prev").onclick = function () { go(st.step - 1); };
+    document.getElementById("next").onclick = function () {
+      var miss = items.filter(function (it) { return !st.likert[it.id]; });
+      items.forEach(function (it) { document.getElementById("c-" + it.id).classList.toggle("missing", !st.likert[it.id]); });
+      if (miss.length) {
+        document.getElementById("err").textContent = "아직 답하지 않은 문항이 " + miss.length + "개 있어요.";
+        document.getElementById("c-" + miss[0].id).scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      go(st.step + 1);
+    };
+  }
+
+  function renderStyle() {
+    var html = '<span class="section-tag">나의 학습 성향</span><p class="lead" style="margin-top:8px">좋고 나쁜 답은 없어요. 두 문장 중 나와 더 가까운 쪽의 동그라미를 골라 주세요. 가까울수록 큰 동그라미예요.</p>';
+    D.styleItems.forEach(function (it0, k) {
+      var it = gjStyleItem(it0, st.info.level);
+      html += '<fieldset class="card" id="c-' + it.id + '" style="margin-inline:0"><legend class="qno" style="padding:0">' + (k + 1) + ' / ' + D.styleItems.length + '</legend><div class="style-q">' + esc(it.q) + '</div><div class="style-row">' +
+        '<div class="opt a" data-side="왼쪽">' + esc(it.a) + '</div><div class="style4">';
+      D.styleScale.forEach(function (o) {
+        var idv = it.id + "_" + (o.v + 2);
+        html += '<input type="radio" name="' + it.id + '" id="' + idv + '" value="' + o.v + '"' + (st.style[it.id] === o.v ? " checked" : "") + '><label for="' + idv + '" class="' + (Math.abs(o.v) === 2 ? "s2" : "s1") + '" title="' + o.label + '" aria-label="' + o.label + '"></label>';
+      });
+      html += '</div><div class="opt b" data-side="오른쪽">' + esc(it.b) + '</div></div></fieldset>';
+    });
+    html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음 단계로</button></div>';
+    app.innerHTML = html;
+    app.onchange = function (e) {
+      var t = e.target; if (t.type !== "radio") return;
+      st.style[t.name] = Number(t.value); save(); progress();
+      document.getElementById("c-" + t.name).classList.remove("missing");
+    };
+    document.getElementById("prev").onclick = function () { go(st.step - 1); };
+    document.getElementById("next").onclick = function () {
+      var miss = D.styleItems.filter(function (it) { return st.style[it.id] === undefined; });
+      D.styleItems.forEach(function (it) { document.getElementById("c-" + it.id).classList.toggle("missing", st.style[it.id] === undefined); });
+      if (miss.length) {
+        document.getElementById("err").textContent = "아직 고르지 않은 문항이 " + miss.length + "개 있어요.";
+        document.getElementById("c-" + miss[0].id).scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      go(STEP_OPEN);
+    };
+  }
+
+  function renderOpen() {
+    var html = '<span class="section-tag">나에 대해 적기</span><p class="lead" style="margin-top:8px">짧게 적어도 괜찮아요. 상담 때 원장님이 참고해요.</p>';
+    D.openItems.forEach(function (it0) {
+      var it = gjOpenItem(it0, st.info.level);
+      var v = st.open[it.id] || "";
+      html += '<div class="field"><label for="o-' + it.id + '">' + esc(it.q) + (it.optional ? "" : '<span class="req">*</span>') + '</label>';
+      if (it.type === "select") {
+        html += '<select id="o-' + it.id + '"><option value="">선택해 주세요</option>' + it.options.map(function (o) { return '<option' + (o === v ? " selected" : "") + '>' + esc(o) + '</option>'; }).join("") + '</select>';
+      } else if (it.type === "textarea") {
+        html += '<textarea id="o-' + it.id + '" maxlength="500" placeholder="' + esc(it.ph) + '">' + esc(v) + '</textarea>';
+      } else {
+        html += '<input type="text" id="o-' + it.id + '" maxlength="100" placeholder="' + esc(it.ph) + '" value="' + esc(v) + '">';
+      }
+      html += '</div>';
+    });
+    html += '<p class="err" id="err"></p><div class="nav"><button class="btn" id="prev">이전</button><button class="btn primary" id="next">검사 완료</button></div>';
+    app.innerHTML = html;
+    function collect() { D.openItems.forEach(function (it) { st.open[it.id] = document.getElementById("o-" + it.id).value.trim(); }); save(); }
+    app.onchange = null; app.oninput = collect;
+    document.getElementById("prev").onclick = function () { collect(); go(STEP_STYLE); };
+    document.getElementById("next").onclick = function () {
+      collect();
+      var miss = D.openItems.filter(function (it) { return !it.optional && !st.open[it.id]; });
+      if (miss.length) { document.getElementById("err").textContent = "'" + gjOpenItem(miss[0], st.info.level).q + "'에 답해 주세요."; document.getElementById("o-" + miss[0].id).focus(); return; }
+      submit();
+    };
+  }
+
+  function payload() {
+    var answers = { likert: st.likert, style: st.style, open: st.open };
+    var r = gjScore(answers);
+    return {
+      id: st.id, version: 1, submittedAt: new Date().toISOString(),
+      info: st.info, answers: answers,
+      summary: { overall: r.overall, type: r.type.name, weak: r.weak.map(function (f) { return f.name; }) }
+    };
+  }
+
+  function submit() {
+    var btn = document.getElementById("next"), err = document.getElementById("err");
+    var data = payload();
+    if (!C.API_URL) try { localStorage.setItem("gj-last-result", JSON.stringify(data)); } catch (e) {}
+    if (!C.API_URL) try { var h = JSON.parse(localStorage.getItem("gj-history")) || []; if (!h.some(function (x) { return x.id === data.id; })) h.push(data); localStorage.setItem("gj-history", JSON.stringify(h.slice(-10))); } catch (e) {}
+    if (!C.API_URL) { st.sent = true; st.preview = true; go(STEP_DONE); return; }
+    btn.disabled = true; btn.textContent = "보내는 중…"; err.textContent = "";
+    fetch(C.API_URL, { method: "POST", body: JSON.stringify(data) })
+      .then(function (res) { return res.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.error || "저장 실패"); // 제출 성공: 공용 기기에 개인정보가 남지 않도록 이름만 남기고 지움
+        st = { step: STEP_DONE, sent: true, id: st.id, info: { name: st.info.name }, likert: {}, style: {}, open: {} };
+        try { localStorage.removeItem("gj-last-result"); } catch (e) {}
+        save(); render(); window.scrollTo(0, 0); })
+      .catch(function () {
+        btn.disabled = false; btn.textContent = "다시 보내기";
+        err.textContent = "인터넷 연결 문제로 결과를 보내지 못했어요. 답은 그대로 저장되어 있으니 '다시 보내기'를 눌러 주세요.";
+      });
+  }
+
+  function renderDone() {
+    app.innerHTML = '<div class="done"><div class="mark" aria-hidden="true">✓</div><h1>수고했어요, ' + esc(st.info.name) + '!</h1>' +
+      '<p class="lead">검사 결과가 ' + esc(C.ACADEMY) + ' 원장님께 전달되었어요.<br>상담 때 결과지를 보며 자세히 이야기 나눠요.</p>' +
+      (st.preview ? '<div class="note"><b>미리보기 모드</b>예요. 앱스 스크립트 주소를 연결하기 전이라 결과는 이 기기에만 저장됐어요.<div class="nav"><a class="btn primary" style="text-align:center;text-decoration:none" href="report.html#local">방금 한 검사 결과지 보기</a></div><div class="nav"><button class="btn" id="again" style="flex:1">처음부터 다시 하기</button></div></div>' : '<div class="nav" style="margin-top:32px"><button class="btn" id="again" style="flex:1">다른 학생이 검사하기</button></div>') +
+      '</div>';
+    var again = document.getElementById("again");
+    if (again) again.onclick = function () { try { localStorage.removeItem(KEY); } catch (e) {} st = { step: 0, id: newId(), info: {}, likert: {}, style: {}, open: {}, sent: false }; go(0); };
+  }
+
+  var _go = go;
+  go = function (s) { if (s >= STEP_INFO && s < STEP_DONE) st.lastStep = s; _go(s); };
+  if (st.sent && st.step !== STEP_DONE) st.step = STEP_DONE;
+  render();
+})();
+</script>
+
+</body>
+</html>
