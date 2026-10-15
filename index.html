@@ -452,6 +452,11 @@ textarea { min-height: 96px; resize: vertical }
   }
 
   if (st.sent && st.step !== STEP_DONE()) st.step = STEP_DONE();
+  /* 바로가기 주소: …/#parent 는 학부모 검사, …/#student 는 학생 검사로 바로 시작 */
+  var want = location.hash.replace("#", "");
+  if ((want === "parent" || want === "student") && (st.sent || (st.step === 0 && !Object.keys(st.likert).length) || st.role !== want && !Object.keys(st.likert).length)) {
+    st = fresh(); st.role = want; st.step = STEP_INFO; save();
+  }
   render();
 })();
 </script>
