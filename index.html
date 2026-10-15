@@ -93,6 +93,8 @@ textarea { min-height: 96px; resize: vertical }
 .consent dd { margin: 0 }
 .check { display: flex; gap: 10px; align-items: flex-start; color: var(--ink); font-weight: 600; cursor: pointer }
 .check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--sel) }
+.ferr { color: var(--err); font-size: 13px; min-height: 0 }
+input.bad { border-color: var(--err) }
 .err { color: var(--err); font-size: 14px; min-height: 1.4em; margin: 4px 0 0 }
 .nav { display: flex; gap: 10px; margin-top: 20px }
 .btn { font: inherit; font-weight: 700; border-radius: 10px; padding: 14px 20px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink) }
@@ -122,8 +124,8 @@ textarea { min-height: 96px; resize: vertical }
   <main id="app" aria-live="polite"></main>
 </div>
 
-<script src="config.js?v=202610160200"></script>
-<script src="questions.js?v=202610160200"></script>
+<script src="config.js?v=202610160208"></script>
+<script src="questions.js?v=202610160208"></script>
 <script>
 (function () {
   var C = GJ_CONFIG, D = GJ_DATA, P = GJ_PARENT;
@@ -230,11 +232,34 @@ textarea { min-height: 96px; resize: vertical }
       r.onchange = function () { collect(); st.info.level = r.value; st.info.grade = ""; save(); rerender(); };
     });
   }
+  /* 휴대폰 번호: 숫자만 쳐도 010-0000-0000 모양으로 자동 정리 */
+  var PHONE_RE = /^01[016789]-\d{3,4}-\d{4}$/;
+  function fmtPhone(v) {
+    var d = String(v || "").replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 7) return d.slice(0, 3) + "-" + d.slice(3);
+    if (d.length === 10) return d.slice(0, 3) + "-" + d.slice(3, 6) + "-" + d.slice(6);
+    return d.slice(0, 3) + "-" + d.slice(3, 7) + "-" + d.slice(7);
+  }
+  function bindPhone(id, required) {
+    var el = document.getElementById(id); if (!el) return;
+    var hint = document.createElement("small"); hint.className = "ferr"; hint.id = id + "-err";
+    el.setAttribute("aria-describedby", hint.id); el.setAttribute("maxlength", "13"); el.setAttribute("autocomplete", "tel");
+    el.parentNode.appendChild(hint);
+    function check(final) {
+      var v = el.value, ok = PHONE_RE.test(v);
+      var msg = !v ? (final && required ? "연락처를 적어 주세요." : "") : ok ? "" : (final || v.replace(/\D/g, "").length >= 11 ? "010-0000-0000 형식의 휴대폰 번호를 적어 주세요." : "");
+      hint.textContent = msg; el.classList.toggle("bad", !!msg);
+    }
+    el.addEventListener("input", function () { var f = fmtPhone(el.value); if (f !== el.value) el.value = f; check(false); });
+    el.addEventListener("blur", function () { check(true); });
+    if (el.value) el.value = fmtPhone(el.value);
+  }
   function validate(s, nameMsg) {
-    var digits = String(s.parentPhone || "").replace(/\D/g, "");
     if (!s.name) return nameMsg;
     if (!s.school) return "학교 이름을 적어 주세요.";
-    if (digits.length < 9 || digits.length > 11) return "보호자 연락처를 숫자로 정확히 적어 주세요.";
+    if (!PHONE_RE.test(s.parentPhone || "")) { var e1 = document.getElementById("f-pphone"); if (e1) { e1.dispatchEvent(new Event("blur")); e1.focus(); } return "보호자 연락처를 010-0000-0000 형식으로 적어 주세요."; }
+    if (s.studentPhone && !PHONE_RE.test(s.studentPhone)) { var e2 = document.getElementById("f-sphone"); if (e2) { e2.dispatchEvent(new Event("blur")); e2.focus(); } return "학생 연락처를 010-0000-0000 형식으로 적어 주세요. 없으면 비워 두세요."; }
     if (!s.consent) return "개인정보 수집·이용에 동의해야 검사를 시작할 수 있어요.";
     return "";
   }
@@ -262,6 +287,7 @@ textarea { min-height: 96px; resize: vertical }
       };
       save();
     }
+    bindPhone("f-pphone", true); bindPhone("f-sphone", false);
     bindLevel(renderInfo, collect);
     app.oninput = collect;
     document.getElementById("prev").onclick = function () { collect(); go(0); };
@@ -302,6 +328,7 @@ textarea { min-height: 96px; resize: vertical }
       };
       save();
     }
+    bindPhone("f-pphone", true);
     bindLevel(renderParentInfo, collect);
     app.oninput = collect; app.onchange = collect;
     document.getElementById("prev").onclick = function () { collect(); go(0); };
